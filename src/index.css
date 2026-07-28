@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================================
+   WorkOrbit dark theme — single source of truth for the whole app (landing,
+   auth pages, and the authenticated dashboard all share this palette). Raw
+   brand tokens come first; shadcn's semantic tokens are derived from them so
+   every existing shadcn/ui component reskins automatically with no per-
+   component edits.
+   ============================================================================ */
+@layer base {
+  :root {
+    /* raw brand tokens, from the WorkOrbit landing page design */
+    --bg-base: #0a1022;
+    --bg-alt: #0d1730;
+    --bg-alt-2: #0b1428;
+    --panel: #121c38;
+    --panel-2: #16213f;
+    --border-raw: rgba(255, 255, 255, 0.09);
+    --border-soft: rgba(255, 255, 255, 0.06);
+    --blue: #2f6fff;
+    --blue-bright: #5b93ff;
+    --cyan: #00d4ff;
+    --indigo: #7c6cff;
+    --white: #f5f7fc;
+    --muted-raw: #93a0c2;
+    --muted-dim: #5f6d91;
+    --destructive-raw: #ef4444;
+    --destructive-dim: #7f1d1d;
+
+    /* shadcn semantic tokens, mapped from the brand tokens above — every
+       shadcn/ui primitive (Button, Card, Dialog, Table, Badge, ...) reads
+       these, so the whole app inherits the theme without touching ui/*.tsx */
+    --background: var(--bg-base);
+    --foreground: var(--white);
+    --card: var(--panel);
+    --card-foreground: var(--white);
+    --popover: var(--panel-2);
+    --popover-foreground: var(--white);
+    --primary: var(--blue);
+    --primary-foreground: var(--white);
+    --secondary: rgba(255, 255, 255, 0.06);
+    --secondary-foreground: var(--white);
+    --muted: var(--panel-2);
+    --muted-foreground: var(--muted-raw);
+    --accent: rgba(47, 111, 255, 0.16);
+    --accent-foreground: var(--white);
+    --destructive: var(--destructive-raw);
+    --destructive-foreground: var(--white);
+    --border: var(--border-raw);
+    --input: var(--border-raw);
+    --ring: var(--blue-bright);
+    --radius: 0.625rem;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

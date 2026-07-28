@@ -1,0 +1,76 @@
+import { useState } from "react";
+import { useParams } from "react-router-dom";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import { PROJECT_STATUS_TONE } from "@/lib/status-badges";
+import { useProject } from "@/features/projects/hooks/useProject";
+import { ProjectStatusStepper } from "@/features/projects/components/ProjectStatusStepper";
+import { ProjectOwnersList } from "@/features/projects/components/ProjectOwnersList";
+import { RoleRequirementsList } from "@/features/projects/components/RoleRequirementsList";
+import { RoleRequirementForm } from "@/features/projects/components/RoleRequirementForm";
+import { AllocationsForProject } from "@/features/allocations/components/AllocationsForProject";
+
+export function ProjectDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const { data: project, isLoading } = useProject(id);
+  const [roleFormOpen, setRoleFormOpen] = useState(false);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-10 w-1/3" />
+        <Skeleton className="h-32 w-full" />
+      </div>
+    );
+  }
+
+  if (!project) {
+    return (
+      <EmptyState
+        message="Project not found"
+        description="It may have been removed, or you don't have access to it."
+      />
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-semibold tracking-tight">{project.name}</h1>
+            <StatusBadge value={project.status} toneMap={PROJECT_STATUS_TONE} />
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {project.client_name ?? "No client"}
+            {project.code ? ` · ${project.code}` : ""}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {project.planned_start_date ?? "No start date"} – {project.planned_end_date ?? "No end date"}
+          </p>
+        </div>
+      </div>
+
+      <ProjectStatusStepper project={project} />
+
+      <ProjectOwnersList projectId={project.id} />
+
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Role Requirements</h2>
+          <Button size="sm" variant="outline" onClick={() => setRoleFormOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add role
+          </Button>
+        </div>
+        <RoleRequirementsList projectId={project.id} />
+        <RoleRequirementForm projectId={project.id} open={roleFormOpen} onOpenChange={setRoleFormOpen} />
+      </div>
+
+      <AllocationsForProject projectId={project.id} />
+    </div>
+  );
+}
