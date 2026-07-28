@@ -226,9 +226,11 @@ export function AddEmployeeForm() {
                         className="mb-2"
                       />
                       <div className="max-h-48 overflow-y-auto">
-                        <button
+                        <Button
                           type="button"
-                          className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
+                          variant="ghost"
+                          size="sm"
+                          className="w-full justify-start gap-2 px-2 font-normal"
                           onClick={() => {
                             form.setValue("reporting_manager_id", "");
                             setManagerPopoverOpen(false);
@@ -236,12 +238,14 @@ export function AddEmployeeForm() {
                         >
                           <Check className={cn("h-4 w-4", !selectedManagerId ? "opacity-100" : "opacity-0")} />
                           No manager
-                        </button>
+                        </Button>
                         {filteredManagers.map((emp) => (
-                          <button
+                          <Button
                             key={emp.id}
                             type="button"
-                            className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
+                            variant="ghost"
+                            size="sm"
+                            className="w-full justify-start gap-2 px-2 font-normal"
                             onClick={() => {
                               form.setValue("reporting_manager_id", emp.id);
                               setManagerPopoverOpen(false);
@@ -252,7 +256,7 @@ export function AddEmployeeForm() {
                             />
                             {emp.full_name}
                             <span className="ml-auto text-xs text-muted-foreground">{emp.email}</span>
-                          </button>
+                          </Button>
                         ))}
                         {filteredManagers.length === 0 && (
                           <p className="px-2 py-1.5 text-sm text-muted-foreground">No matching employees</p>

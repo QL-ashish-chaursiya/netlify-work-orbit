@@ -6,7 +6,7 @@ export function ForgotPasswordPage() {
   return (
     <AuthLayout
       title="Reset your password"
-      description="Bulk-imported employees: this is your first-login path."
+      description=""
       footer={
         <Link to="/login" className="text-primary hover:underline">
           Back to sign in

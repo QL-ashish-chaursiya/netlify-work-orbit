@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -155,8 +156,7 @@ export function ProfileCompletionForm({ onCompleted }: ProfileCompletionFormProp
                       <FormItem>
                         <FormLabel className="text-xs text-muted-foreground">Last used</FormLabel>
                         <FormControl>
-                          <Input
-                            type="date"
+                          <DatePicker
                             className="w-36"
                             name={field.name}
                             ref={field.ref}

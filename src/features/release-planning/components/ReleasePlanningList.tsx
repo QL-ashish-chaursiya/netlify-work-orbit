@@ -16,7 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { cn } from "@/lib/utils";
 import { useAllocationsPlannedForRelease } from "@/features/release-planning/hooks/useAllocationsPlannedForRelease";
 import { useConfirmRelease } from "@/features/release-planning/hooks/useConfirmRelease";
@@ -116,7 +116,7 @@ function RowActions({ allocation }: { allocation: AllocationWithNames }) {
                   <FormItem>
                     <FormLabel>New expected completion date</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <DatePicker {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

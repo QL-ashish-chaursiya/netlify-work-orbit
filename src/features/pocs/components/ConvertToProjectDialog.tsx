@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Dialog,
   DialogContent,
@@ -118,7 +119,7 @@ export function ConvertToProjectDialog({ poc, open, onOpenChange }: ConvertToPro
                       <FormItem>
                         <FormLabel>Planned start</FormLabel>
                         <FormControl>
-                          <Input type="date" {...field} />
+                          <DatePicker {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -131,7 +132,7 @@ export function ConvertToProjectDialog({ poc, open, onOpenChange }: ConvertToPro
                       <FormItem>
                         <FormLabel>Planned end</FormLabel>
                         <FormControl>
-                          <Input type="date" {...field} />
+                          <DatePicker {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

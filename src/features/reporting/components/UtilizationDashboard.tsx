@@ -123,10 +123,10 @@ export function UtilizationDashboard() {
                 <XAxis dataKey="band" tick={{ fontSize: 12 }} tickLine={false} axisLine={{ className: "stroke-border" }} />
                 <YAxis allowDecimals={false} tick={{ fontSize: 12 }} tickLine={false} axisLine={false} width={28} />
                 <Tooltip
-                  cursor={{ fill: "hsl(var(--muted))" }}
-                  contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }}
+                  cursor={{ fill: "var(--muted)" }}
+                  contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }}
                 />
-                <Bar dataKey="count" name="Resources" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} maxBarSize={56} />
+                <Bar dataKey="count" name="Resources" fill="var(--primary)" radius={[4, 4, 0, 0]} maxBarSize={56} />
               </BarChart>
             </ResponsiveContainer>
           </div>

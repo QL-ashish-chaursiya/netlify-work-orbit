@@ -12,7 +12,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { markForReleaseSchema, type MarkForReleaseInput } from "@/features/release-planning/types";
 import { useMarkForRelease } from "@/features/release-planning/hooks/useMarkForRelease";
@@ -74,7 +74,7 @@ export function MarkForReleaseDialog({ allocationId, trigger }: MarkForReleaseDi
                 <FormItem>
                   <FormLabel>Planned release date</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <DatePicker {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

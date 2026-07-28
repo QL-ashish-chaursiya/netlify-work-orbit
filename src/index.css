@@ -3,15 +3,17 @@
 @tailwind utilities;
 
 /* ============================================================================
-   WorkOrbit dark theme — single source of truth for the whole app (landing,
-   auth pages, and the authenticated dashboard all share this palette). Raw
-   brand tokens come first; shadcn's semantic tokens are derived from them so
-   every existing shadcn/ui component reskins automatically with no per-
-   component edits.
+   WorkOrbit theme. The app is deliberately two-tone: a dark navy brand rail
+   (Sidebar — styled directly off the raw brand tokens below, see
+   components/layout/Sidebar.tsx) and a light content area everywhere else
+   (topbar, cards, forms, tables — via the shadcn semantic tokens). The
+   marketing landing page also references the raw brand tokens directly and
+   stays fully dark, independent of this file's semantic (light) values.
    ============================================================================ */
 @layer base {
   :root {
-    /* raw brand tokens, from the WorkOrbit landing page design */
+    /* raw brand tokens — used directly by Sidebar and the landing page,
+       independent of whatever the semantic tokens below are set to */
     --bg-base: #0a1022;
     --bg-alt: #0d1730;
     --bg-alt-2: #0b1428;
@@ -29,28 +31,27 @@
     --destructive-raw: #ef4444;
     --destructive-dim: #7f1d1d;
 
-    /* shadcn semantic tokens, mapped from the brand tokens above — every
-       shadcn/ui primitive (Button, Card, Dialog, Table, Badge, ...) reads
-       these, so the whole app inherits the theme without touching ui/*.tsx */
-    --background: var(--bg-base);
-    --foreground: var(--white);
-    --card: var(--panel);
-    --card-foreground: var(--white);
-    --popover: var(--panel-2);
-    --popover-foreground: var(--white);
-    --primary: var(--blue);
-    --primary-foreground: var(--white);
-    --secondary: rgba(255, 255, 255, 0.06);
-    --secondary-foreground: var(--white);
-    --muted: var(--panel-2);
-    --muted-foreground: var(--muted-raw);
-    --accent: rgba(47, 111, 255, 0.16);
-    --accent-foreground: var(--white);
-    --destructive: var(--destructive-raw);
-    --destructive-foreground: var(--white);
-    --border: var(--border-raw);
-    --input: var(--border-raw);
-    --ring: var(--blue-bright);
+    /* shadcn semantic tokens — light, cool-toned (chosen, not default pure
+       white/grey), used by every shadcn/ui primitive in the content area */
+    --background: #f6f7fb;
+    --foreground: #12172b;
+    --card: #ffffff;
+    --card-foreground: #12172b;
+    --popover: #ffffff;
+    --popover-foreground: #12172b;
+    --primary: #2f6fff;
+    --primary-foreground: #ffffff;
+    --secondary: #f1f3f9;
+    --secondary-foreground: #12172b;
+    --muted: #f1f3f9;
+    --muted-foreground: #64708c;
+    --accent: #eaf0ff;
+    --accent-foreground: #12172b;
+    --destructive: #dc2626;
+    --destructive-foreground: #ffffff;
+    --border: #e3e6ef;
+    --input: #e3e6ef;
+    --ring: #2f6fff;
     --radius: 0.625rem;
   }
 

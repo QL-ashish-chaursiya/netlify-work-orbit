@@ -1,11 +1,11 @@
 import {
+  Area,
+  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
   Cell,
   Legend,
-  Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -23,7 +23,7 @@ import { usePocMonthlyStats, type PocMonthStat } from "@/features/pocs/hooks/use
 const PENDING_COLOR = "#d97706";
 const CLOSED_WON_COLOR = "#059669";
 const CLOSED_LOST_COLOR = "#ef4444";
-const CONVERSION_LINE_COLOR = "hsl(var(--primary))";
+const CONVERSION_LINE_COLOR = "var(--primary)";
 
 interface POCDashboardProps {
   selectedMonth: string | null;
@@ -117,29 +117,29 @@ export function POCDashboard({ selectedMonth, onSelectMonth }: POCDashboardProps
             <div className="h-72 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={monthlyStats} onClick={handleChartClick} barCategoryGap="20%">
-                  <CartesianGrid vertical={false} stroke="hsl(var(--border))" />
+                  <CartesianGrid vertical={false} stroke="var(--border)" />
                   <XAxis
                     dataKey="month"
                     tickFormatter={monthLabelTick}
                     tickLine={false}
-                    axisLine={{ stroke: "hsl(var(--border))" }}
-                    tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
+                    axisLine={{ stroke: "var(--border)" }}
+                    tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
                   />
                   <YAxis
                     allowDecimals={false}
                     tickLine={false}
                     axisLine={false}
-                    tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
+                    tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
                     width={28}
                   />
-                  <Tooltip content={<VolumeTooltip />} cursor={{ fill: "hsl(var(--muted))" }} />
+                  <Tooltip content={<VolumeTooltip />} cursor={{ fill: "var(--muted)" }} />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
                   <Bar
                     dataKey="pending"
                     name="Pending"
                     stackId="pocs"
                     fill={PENDING_COLOR}
-                    stroke="hsl(var(--background))"
+                    stroke="var(--background)"
                     strokeWidth={2}
                     style={{ cursor: "pointer" }}
                   >
@@ -152,7 +152,7 @@ export function POCDashboard({ selectedMonth, onSelectMonth }: POCDashboardProps
                     name="Closed Won"
                     stackId="pocs"
                     fill={CLOSED_WON_COLOR}
-                    stroke="hsl(var(--background))"
+                    stroke="var(--background)"
                     strokeWidth={2}
                     style={{ cursor: "pointer" }}
                   >
@@ -165,7 +165,7 @@ export function POCDashboard({ selectedMonth, onSelectMonth }: POCDashboardProps
                     name="Closed Lost"
                     stackId="pocs"
                     fill={CLOSED_LOST_COLOR}
-                    stroke="hsl(var(--background))"
+                    stroke="var(--background)"
                     strokeWidth={2}
                     radius={[4, 4, 0, 0]}
                     style={{ cursor: "pointer" }}
@@ -188,34 +188,41 @@ export function POCDashboard({ selectedMonth, onSelectMonth }: POCDashboardProps
           <CardContent>
             <div className="h-72 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={monthlyStats} onClick={handleChartClick}>
-                  <CartesianGrid vertical={false} stroke="hsl(var(--border))" />
+                <AreaChart data={monthlyStats} onClick={handleChartClick} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="conversionTrendFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={CONVERSION_LINE_COLOR} stopOpacity={0.35} />
+                      <stop offset="100%" stopColor={CONVERSION_LINE_COLOR} stopOpacity={0.02} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
                   <XAxis
                     dataKey="month"
                     tickFormatter={monthLabelTick}
                     tickLine={false}
-                    axisLine={{ stroke: "hsl(var(--border))" }}
-                    tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
+                    axisLine={{ stroke: "var(--border)" }}
+                    tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
                   />
                   <YAxis
                     domain={[0, 100]}
                     tickFormatter={(v) => `${v}%`}
                     tickLine={false}
                     axisLine={false}
-                    tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
+                    tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
                     width={40}
                   />
-                  <Tooltip content={<ConversionTooltip />} cursor={{ stroke: "hsl(var(--border))" }} />
-                  <Line
+                  <Tooltip content={<ConversionTooltip />} cursor={{ stroke: "var(--border)" }} />
+                  <Area
                     type="monotone"
                     dataKey="conversionRate"
                     name="Conversion rate"
                     stroke={CONVERSION_LINE_COLOR}
                     strokeWidth={2}
-                    dot={{ r: 4, fill: CONVERSION_LINE_COLOR, style: { cursor: "pointer" } }}
+                    fill="url(#conversionTrendFill)"
+                    dot={{ r: 4, fill: CONVERSION_LINE_COLOR, strokeWidth: 0, style: { cursor: "pointer" } }}
                     activeDot={{ r: 6 }}
                   />
-                </LineChart>
+                </AreaChart>
               </ResponsiveContainer>
             </div>
           </CardContent>

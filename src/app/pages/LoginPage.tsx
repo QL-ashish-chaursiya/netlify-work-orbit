@@ -6,7 +6,7 @@ export function LoginPage() {
   return (
     <AuthLayout
       title="Sign in"
-      description="Email + password only — no SSO, no magic links."
+      description=""
       footer={
         <>
           New company?{" "}

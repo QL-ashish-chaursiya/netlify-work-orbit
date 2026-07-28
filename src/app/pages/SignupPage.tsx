@@ -6,7 +6,7 @@ export function SignupPage() {
   return (
     <AuthLayout
       title="Create your organization"
-      description="You'll become the Admin — no billing step, trial plan with 25 seats starts automatically."
+      description=""
       footer={
         <>
           Already have an account?{" "}
