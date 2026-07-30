@@ -33,6 +33,9 @@ export function useExpertiseSearch(filters: ExpertiseSearchFilters) {
       if (filters.minExperience != null) {
         skillsFilterQuery = skillsFilterQuery.gte("experience_years", filters.minExperience);
       }
+      if (filters.maxExperience != null) {
+        skillsFilterQuery = skillsFilterQuery.lte("experience_years", filters.maxExperience);
+      }
       const { data: profileSkills, error: psError } = await skillsFilterQuery;
       if (psError) throw psError;
 
@@ -42,17 +45,25 @@ export function useExpertiseSearch(filters: ExpertiseSearchFilters) {
 
       const { data: allocations, error: allocationsError } = await supabase
         .from("allocations")
-        .select("profile_id, allocation_percent, status")
+        .select("profile_id, allocation_percent, status, planned_release_date, expected_completion_date")
         .in("profile_id", profileIds)
         .eq("status", "active");
       if (allocationsError) throw allocationsError;
 
       const utilizationByProfile = new Map<string, number>();
+      const availableFromByProfile = new Map<string, string>();
       for (const allocation of allocations ?? []) {
         utilizationByProfile.set(
           allocation.profile_id,
           (utilizationByProfile.get(allocation.profile_id) ?? 0) + Number(allocation.allocation_percent),
         );
+        const releaseDate = allocation.planned_release_date ?? allocation.expected_completion_date;
+        if (releaseDate) {
+          const existing = availableFromByProfile.get(allocation.profile_id);
+          if (!existing || releaseDate < existing) {
+            availableFromByProfile.set(allocation.profile_id, releaseDate);
+          }
+        }
       }
 
       const skillsByProfile = new Map<string, ExpertiseSearchResult["skills"]>();
@@ -70,22 +81,30 @@ export function useExpertiseSearch(filters: ExpertiseSearchFilters) {
         skillsByProfile.set(ps.profile_id, list);
       }
 
-      // When a skill filter is active, only profiles that actually matched
-      // that profile_skills query should appear in results.
-      const matchingProfileIds = filters.skillId ? new Set((profileSkills ?? []).map((ps) => ps.profile_id)) : null;
+      // When a skill or experience filter is active, only profiles that
+      // actually matched that profile_skills query should appear in results.
+      const hasSkillFilter = filters.skillId != null || filters.minExperience != null || filters.maxExperience != null;
+      const matchingProfileIds = hasSkillFilter ? new Set((profileSkills ?? []).map((ps) => ps.profile_id)) : null;
 
       return profiles
         .filter((p) => !matchingProfileIds || matchingProfileIds.has(p.id))
         .map((p) => {
           const utilizationPercent = utilizationByProfile.get(p.id) ?? 0;
+          const profileSkillList = skillsByProfile.get(p.id) ?? [];
+          const experienceYears = profileSkillList.reduce<number | null>((max, s) => {
+            if (s.experienceYears == null) return max;
+            return max == null ? s.experienceYears : Math.max(max, s.experienceYears);
+          }, null);
           return {
             id: p.id,
             full_name: p.full_name,
             designation: p.designation,
             primary_role: p.primary_role,
-            skills: skillsByProfile.get(p.id) ?? [],
+            skills: profileSkillList,
             utilizationPercent,
             isOverAllocated: utilizationPercent > 100,
+            experienceYears,
+            availableFrom: availableFromByProfile.get(p.id) ?? null,
           };
         })
         .filter((p) => filters.maxUtilization == null || p.utilizationPercent <= filters.maxUtilization);

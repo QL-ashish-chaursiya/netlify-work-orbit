@@ -1,54 +1,38 @@
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { ArrowDown, ArrowUp } from "lucide-react";
+import { Bar, BarChart, Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { usePocMonthlyStats, type PocMonthStat } from "@/features/pocs/hooks/usePocMonthlyStats";
 
-// Status-mapped, fixed-order categorical colors — same semantics as
-// POC_OUTCOME_TONE's amber/green/red (pending / closed-won / closed-lost),
-// re-picked at the 600-weight so the triad passes the CVD/lightness checks
-// on both light and dark chart surfaces (validated with
-// dataviz's validate_palette.js).
+// Same fixed-order categorical triad as the outcome status badges
+// (amber/green/red), re-picked at the 600-weight for chart surfaces.
 const PENDING_COLOR = "#d97706";
 const CLOSED_WON_COLOR = "#059669";
-const CLOSED_LOST_COLOR = "#ef4444";
-const CONVERSION_LINE_COLOR = "var(--primary)";
+const CLOSED_LOST_COLOR = "#e11d48";
+const TREND_MUTED = "#c7d2fe";
+const TREND_ACTIVE = "#4f46e5";
 
 interface POCDashboardProps {
   selectedMonth: string | null;
   onSelectMonth: (month: string | null) => void;
+  currentMonthKey: string;
 }
 
-function VolumeTooltip({ active, payload }: { active?: boolean; payload?: { payload: PocMonthStat }[] }) {
-  const stat = active ? payload?.[0]?.payload : undefined;
-  if (!stat) return null;
+function OutcomeTooltip({ active, payload }: { active?: boolean; payload?: { name: string; value: number }[] }) {
+  const entry = active ? payload?.[0] : undefined;
+  if (!entry) return null;
   return (
-    <div className="rounded-md border bg-popover p-3 text-sm text-popover-foreground shadow-md">
-      <p className="font-medium">{stat.monthLabel}</p>
-      <p style={{ color: PENDING_COLOR }}>Pending: {stat.pending}</p>
-      <p style={{ color: CLOSED_WON_COLOR }}>Closed Won: {stat.closedWon}</p>
-      <p style={{ color: CLOSED_LOST_COLOR }}>Closed Lost: {stat.closedLost}</p>
-      <p className="mt-1 border-t pt-1 text-muted-foreground">Total: {stat.total}</p>
+    <div className="rounded-md border bg-popover p-2 text-xs text-popover-foreground shadow-md">
+      {entry.name}: {entry.value}
     </div>
   );
 }
 
-function ConversionTooltip({ active, payload }: { active?: boolean; payload?: { payload: PocMonthStat }[] }) {
+function TrendTooltip({ active, payload }: { active?: boolean; payload?: { payload: PocMonthStat }[] }) {
   const stat = active ? payload?.[0]?.payload : undefined;
   if (!stat) return null;
   return (
-    <div className="rounded-md border bg-popover p-3 text-sm text-popover-foreground shadow-md">
+    <div className="rounded-md border bg-popover p-2 text-xs text-popover-foreground shadow-md">
       <p className="font-medium">{stat.monthLabel}</p>
       <p>Conversion rate: {stat.conversionRate}%</p>
       <p className="text-muted-foreground">
@@ -58,185 +42,122 @@ function ConversionTooltip({ active, payload }: { active?: boolean; payload?: { 
   );
 }
 
-// Monthly POC dashboard (BRD §5 Phase 6): volume-by-outcome bar chart +
-// conversion-rate trend, each on its own single-scale axis (never combined
-// into one dual-axis chart), plus click-to-drill-down wired up to
-// POCList via the selectedMonth/onSelectMonth props POCsPage owns.
-export function POCDashboard({ selectedMonth, onSelectMonth }: POCDashboardProps) {
+// Compact 3-card summary (BRD §5 Phase 6): current-month volume + delta,
+// this-selection's outcome split as a donut, and a trailing-6-month
+// conversion-rate sparkline that doubles as the month picker driving
+// POCList's drill-down (click a bar to select/deselect that month).
+export function POCDashboard({ selectedMonth, onSelectMonth, currentMonthKey }: POCDashboardProps) {
   const { monthlyStats, totals, isLoading } = usePocMonthlyStats();
 
-  function handleChartClick(state: { activeLabel?: string } | null) {
-    if (!state?.activeLabel) return;
-    onSelectMonth(state.activeLabel === selectedMonth ? null : state.activeLabel);
-  }
+  const currentIndex = monthlyStats.findIndex((m) => m.month === currentMonthKey);
+  const previousMonth = currentIndex > 0 ? monthlyStats[currentIndex - 1] : undefined;
+  const currentMonth = monthlyStats[currentIndex];
+  const delta = currentMonth && previousMonth ? currentMonth.total - previousMonth.total : 0;
 
-  function monthLabelTick(month: string): string {
-    return monthlyStats.find((m) => m.month === month)?.monthLabel ?? month;
-  }
+  const trendMonths = monthlyStats.slice(Math.max(0, currentIndex - 5), currentIndex + 1);
+
+  const outcomeScope = selectedMonth ? monthlyStats.find((m) => m.month === selectedMonth) : undefined;
+  const outcomeStats = outcomeScope ?? totals;
+  const outcomeData = [
+    { name: "Closed-Won", value: outcomeStats.closedWon, color: CLOSED_WON_COLOR },
+    { name: "Closed-Lost", value: outcomeStats.closedLost, color: CLOSED_LOST_COLOR },
+    { name: "Pending", value: outcomeStats.pending, color: PENDING_COLOR },
+  ];
+  const outcomeTotal = outcomeData.reduce((sum, d) => sum + d.value, 0);
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total POCs</CardTitle>
-          </CardHeader>
-          <CardContent className="text-2xl font-semibold">{isLoading ? "—" : totals.total}</CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Closed Won</CardTitle>
-          </CardHeader>
-          <CardContent className="text-2xl font-semibold" style={{ color: CLOSED_WON_COLOR }}>
-            {isLoading ? "—" : totals.closedWon}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Closed Lost</CardTitle>
-          </CardHeader>
-          <CardContent className="text-2xl font-semibold" style={{ color: CLOSED_LOST_COLOR }}>
-            {isLoading ? "—" : totals.closedLost}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Conversion rate</CardTitle>
-          </CardHeader>
-          <CardContent className="text-2xl font-semibold">{isLoading ? "—" : `${totals.conversionRate}%`}</CardContent>
-        </Card>
-      </div>
+    <div className="grid gap-4 lg:grid-cols-3">
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium text-muted-foreground">POCs this month</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-3xl font-semibold">{isLoading ? "—" : currentMonth?.total ?? 0}</p>
+          {!isLoading && previousMonth && (
+            <p
+              className={cn(
+                "mt-1 flex items-center gap-1 text-sm font-medium",
+                delta >= 0 ? "text-emerald-600" : "text-rose-600",
+              )}
+            >
+              {delta >= 0 ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" />}
+              {Math.abs(delta)} vs {previousMonth.monthLabel.split(" ")[0]}
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">POCs per month</CardTitle>
-            <p className="text-sm text-muted-foreground">Click a month to filter the list below.</p>
-          </CardHeader>
-          <CardContent>
-            <div className="h-72 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlyStats} onClick={handleChartClick} barCategoryGap="20%">
-                  <CartesianGrid vertical={false} stroke="var(--border)" />
-                  <XAxis
-                    dataKey="month"
-                    tickFormatter={monthLabelTick}
-                    tickLine={false}
-                    axisLine={{ stroke: "var(--border)" }}
-                    tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
-                  />
-                  <YAxis
-                    allowDecimals={false}
-                    tickLine={false}
-                    axisLine={false}
-                    tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
-                    width={28}
-                  />
-                  <Tooltip content={<VolumeTooltip />} cursor={{ fill: "var(--muted)" }} />
-                  <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Bar
-                    dataKey="pending"
-                    name="Pending"
-                    stackId="pocs"
-                    fill={PENDING_COLOR}
-                    stroke="var(--background)"
-                    strokeWidth={2}
-                    style={{ cursor: "pointer" }}
-                  >
-                    {monthlyStats.map((entry) => (
-                      <Cell key={entry.month} opacity={selectedMonth && selectedMonth !== entry.month ? 0.35 : 1} />
-                    ))}
-                  </Bar>
-                  <Bar
-                    dataKey="closedWon"
-                    name="Closed Won"
-                    stackId="pocs"
-                    fill={CLOSED_WON_COLOR}
-                    stroke="var(--background)"
-                    strokeWidth={2}
-                    style={{ cursor: "pointer" }}
-                  >
-                    {monthlyStats.map((entry) => (
-                      <Cell key={entry.month} opacity={selectedMonth && selectedMonth !== entry.month ? 0.35 : 1} />
-                    ))}
-                  </Bar>
-                  <Bar
-                    dataKey="closedLost"
-                    name="Closed Lost"
-                    stackId="pocs"
-                    fill={CLOSED_LOST_COLOR}
-                    stroke="var(--background)"
-                    strokeWidth={2}
-                    radius={[4, 4, 0, 0]}
-                    style={{ cursor: "pointer" }}
-                  >
-                    {monthlyStats.map((entry) => (
-                      <Cell key={entry.month} opacity={selectedMonth && selectedMonth !== entry.month ? 0.35 : 1} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium text-muted-foreground">
+            Outcome split{selectedMonth && outcomeScope ? ` — ${outcomeScope.monthLabel}` : ""}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <p className="text-sm text-muted-foreground">—</p>
+          ) : outcomeTotal === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">No POCs in this period.</p>
+          ) : (
+            <div className="flex items-center gap-4">
+              <div className="h-28 w-28 shrink-0">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={outcomeData} dataKey="value" nameKey="name" innerRadius={32} outerRadius={54} strokeWidth={2}>
+                      {outcomeData.map((d) => (
+                        <Cell key={d.name} fill={d.color} stroke="var(--background)" />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<OutcomeTooltip />} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <ul className="space-y-1.5 text-sm">
+                {outcomeData.map((d) => (
+                  <li key={d.name} className="flex items-center gap-2">
+                    <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: d.color }} />
+                    <span className="text-muted-foreground">{d.name}</span>
+                    <span className="font-semibold">{d.value}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
-          </CardContent>
-        </Card>
+          )}
+        </CardContent>
+      </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Conversion rate trend</CardTitle>
-            <p className="text-sm text-muted-foreground">Closed-won share of decided POCs, per month.</p>
-          </CardHeader>
-          <CardContent>
-            <div className="h-72 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={monthlyStats} onClick={handleChartClick} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="conversionTrendFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={CONVERSION_LINE_COLOR} stopOpacity={0.35} />
-                      <stop offset="100%" stopColor={CONVERSION_LINE_COLOR} stopOpacity={0.02} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
-                  <XAxis
-                    dataKey="month"
-                    tickFormatter={monthLabelTick}
-                    tickLine={false}
-                    axisLine={{ stroke: "var(--border)" }}
-                    tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
-                  />
-                  <YAxis
-                    domain={[0, 100]}
-                    tickFormatter={(v) => `${v}%`}
-                    tickLine={false}
-                    axisLine={false}
-                    tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
-                    width={40}
-                  />
-                  <Tooltip content={<ConversionTooltip />} cursor={{ stroke: "var(--border)" }} />
-                  <Area
-                    type="monotone"
-                    dataKey="conversionRate"
-                    name="Conversion rate"
-                    stroke={CONVERSION_LINE_COLOR}
-                    strokeWidth={2}
-                    fill="url(#conversionTrendFill)"
-                    dot={{ r: 4, fill: CONVERSION_LINE_COLOR, strokeWidth: 0, style: { cursor: "pointer" } }}
-                    activeDot={{ r: 6 }}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {selectedMonth && (
-        <div className="flex items-center gap-2 text-sm">
-          <span className="text-muted-foreground">Showing POCs for {monthLabelTick(selectedMonth)}.</span>
-          <Button variant="ghost" size="sm" onClick={() => onSelectMonth(null)}>
-            Clear filter
-          </Button>
-        </div>
-      )}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+          <CardTitle className="text-sm font-medium text-muted-foreground">Conversion trend</CardTitle>
+          <span className="text-xs text-muted-foreground">Trailing 6 months</span>
+        </CardHeader>
+        <CardContent>
+          <div className="h-28 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={trendMonths}
+                barCategoryGap="28%"
+                onClick={(state: { activeLabel?: string } | null) => {
+                  if (!state?.activeLabel) return;
+                  onSelectMonth(state.activeLabel === selectedMonth ? null : state.activeLabel);
+                }}
+              >
+                <Tooltip content={<TrendTooltip />} cursor={{ fill: "var(--muted)" }} />
+                <Bar dataKey="conversionRate" radius={[4, 4, 0, 0]} style={{ cursor: "pointer" }} isAnimationActive={false}>
+                  {trendMonths.map((m) => (
+                    <Cell key={m.month} fill={(selectedMonth ?? currentMonthKey) === m.month ? TREND_ACTIVE : TREND_MUTED} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="mt-1 grid grid-cols-6 gap-1 text-center text-[11px] text-muted-foreground">
+            {trendMonths.map((m) => (
+              <span key={m.month}>{m.monthLabel.split(" ")[0]}</span>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

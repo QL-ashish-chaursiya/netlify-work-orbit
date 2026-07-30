@@ -25,11 +25,13 @@ import { ExpertiseSearchPage } from "@/features/allocations/pages/ExpertiseSearc
 import { ReleaseCalendarPage } from "@/features/release-planning/pages/ReleaseCalendarPage";
 
 import { ReportingPage } from "@/features/reporting/pages/ReportingPage";
+import { BenchReportPage } from "@/features/reporting/pages/BenchReportPage";
 
 import { POCsPage } from "@/features/pocs/pages/POCsPage";
+import { LogPocPage } from "@/features/pocs/pages/LogPocPage";
 import { POCDetailPage } from "@/features/pocs/pages/POCDetailPage";
 
-import { NotificationList } from "@/features/notifications/components/NotificationList";
+import { NotificationsPage } from "@/features/notifications/pages/NotificationsPage";
 import { LandingPage } from "@/features/marketing/pages/LandingPage";
 
 function Shell({ children }: { children: ReactNode }) {
@@ -75,17 +77,19 @@ export const router = createBrowserRouter([
           { path: "/release-calendar", element: <Shell><ReleaseCalendarPage /></Shell> },
 
           { path: "/reporting", element: <Shell><ReportingPage /></Shell> },
+          { path: "/bench-report", element: <Shell><BenchReportPage /></Shell> },
 
           {
             path: "/pocs",
             element: <RoleRoute allow={["admin", "sales_lead"]} />,
             children: [
               { index: true, element: <Shell><POCsPage /></Shell> },
+              { path: "new", element: <Shell><LogPocPage /></Shell> },
               { path: ":id", element: <Shell><POCDetailPage /></Shell> },
             ],
           },
 
-          { path: "/notifications", element: <Shell><NotificationList /></Shell> },
+          { path: "/notifications", element: <Shell><NotificationsPage /></Shell> },
         ],
       },
     ],

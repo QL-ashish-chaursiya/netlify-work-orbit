@@ -16,6 +16,7 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { POC_OUTCOME_TONE } from "@/lib/status-badges";
 import { usePoc } from "@/features/pocs/hooks/usePoc";
+import { usePocMilestones } from "@/features/pocs/hooks/usePocMilestones";
 import { useSetPocOutcome } from "@/features/pocs/hooks/useSetPocOutcome";
 import { useAddPocResource } from "@/features/pocs/hooks/useAddPocResource";
 import { useRemovePocResource } from "@/features/pocs/hooks/useRemovePocResource";
@@ -46,6 +47,7 @@ export function POCDetail({ pocId }: POCDetailProps) {
   const { data: poc, isLoading } = usePoc(pocId);
   const { data: businessFunctions } = useBusinessFunctions();
   const { data: employees } = useEmployees();
+  const { data: milestones } = usePocMilestones(pocId);
 
   const setOutcome = useSetPocOutcome();
   const addResource = useAddPocResource();
@@ -63,6 +65,11 @@ export function POCDetail({ pocId }: POCDetailProps) {
   const businessFunctionName = useMemo(
     () => businessFunctions?.find((bf) => bf.id === poc?.business_function_id)?.name ?? null,
     [businessFunctions, poc?.business_function_id],
+  );
+
+  const presalesLeadName = useMemo(
+    () => employees?.find((e) => e.id === poc?.presales_lead_id)?.full_name ?? null,
+    [employees, poc?.presales_lead_id],
   );
 
   const availableEmployees = useMemo(() => {
@@ -132,11 +139,19 @@ export function POCDetail({ pocId }: POCDetailProps) {
               <dd>{businessFunctionName ?? "—"}</dd>
             </div>
             <div>
+              <dt className="font-medium text-foreground">Presales / Sales lead</dt>
+              <dd>{presalesLeadName ?? "—"}</dd>
+            </div>
+            <div>
+              <dt className="font-medium text-foreground">Priority</dt>
+              <dd>{humanizeEnum(poc.priority)}</dd>
+            </div>
+            <div>
               <dt className="font-medium text-foreground">Start date</dt>
               <dd>{poc.start_date ?? "—"}</dd>
             </div>
             <div>
-              <dt className="font-medium text-foreground">End date</dt>
+              <dt className="font-medium text-foreground">Target close date</dt>
               <dd>{poc.end_date ?? "—"}</dd>
             </div>
             <div>
@@ -144,6 +159,12 @@ export function POCDetail({ pocId }: POCDetailProps) {
               <dd>{new Date(poc.created_at).toLocaleDateString()}</dd>
             </div>
           </dl>
+          {poc.justification && (
+            <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">Justification: </span>
+              {poc.justification}
+            </p>
+          )}
         </div>
         <div className="flex flex-col items-end gap-2">
           {poc.converted_project_id ? (
@@ -266,6 +287,44 @@ export function POCDetail({ pocId }: POCDetailProps) {
           </CardContent>
         </Card>
       </div>
+
+      {milestones && milestones.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Effort by milestone / feature</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto rounded-md border">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
+                    <th className="px-3 py-2 text-left font-semibold">Milestone / Feature</th>
+                    <th className="px-3 py-2 text-right font-semibold">Backend</th>
+                    <th className="px-3 py-2 text-right font-semibold">Frontend</th>
+                    <th className="px-3 py-2 text-right font-semibold">PM</th>
+                    <th className="px-3 py-2 text-right font-semibold">QA</th>
+                    <th className="px-3 py-2 text-right font-semibold">Total</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {milestones.map((m) => (
+                    <tr key={m.id}>
+                      <td className="px-3 py-2">{m.name}</td>
+                      <td className="px-3 py-2 text-right">{m.backend_days}</td>
+                      <td className="px-3 py-2 text-right">{m.frontend_days}</td>
+                      <td className="px-3 py-2 text-right">{m.pm_days}</td>
+                      <td className="px-3 py-2 text-right">{m.qa_days}</td>
+                      <td className="px-3 py-2 text-right font-medium">
+                        {m.backend_days + m.frontend_days + m.pm_days + m.qa_days}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <ConfirmDialog
         open={!!removeTarget}

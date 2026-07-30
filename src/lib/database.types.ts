@@ -27,6 +27,8 @@ export type RequestStatus = "pending" | "approved" | "rejected" | "withdrawn" | 
 
 export type PocOutcome = "pending" | "closed_won" | "closed_lost";
 
+export type PocPriority = "normal" | "high" | "urgent";
+
 export type ImportJobStatus = "processing" | "completed" | "completed_with_errors" | "failed";
 
 export type PlanTier = "trial" | "starter" | "growth" | "enterprise";
@@ -380,6 +382,9 @@ export interface Database {
           outcome: PocOutcome;
           outcome_notes: string | null;
           converted_project_id: string | null;
+          priority: PocPriority;
+          presales_lead_id: string | null;
+          justification: string | null;
           created_by: string;
           created_at: string;
           updated_at: string;
@@ -395,6 +400,9 @@ export interface Database {
           outcome?: PocOutcome;
           outcome_notes?: string | null;
           converted_project_id?: string | null;
+          priority?: PocPriority;
+          presales_lead_id?: string | null;
+          justification?: string | null;
           created_by: string;
           created_at?: string;
           updated_at?: string;
@@ -406,6 +414,30 @@ export interface Database {
         Row: { id: string; poc_id: string; profile_id: string; allocation_id: string | null; created_at: string };
         Insert: { id?: string; poc_id: string; profile_id: string; allocation_id?: string | null; created_at?: string };
         Update: Partial<Database["public"]["Tables"]["poc_resources"]["Insert"]>;
+        Relationships: [];
+      };
+      poc_milestones: {
+        Row: {
+          id: string;
+          poc_id: string;
+          name: string;
+          backend_days: number;
+          frontend_days: number;
+          pm_days: number;
+          qa_days: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          poc_id: string;
+          name: string;
+          backend_days?: number;
+          frontend_days?: number;
+          pm_days?: number;
+          qa_days?: number;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["poc_milestones"]["Insert"]>;
         Relationships: [];
       };
       notification_rules: {
@@ -526,6 +558,7 @@ export interface Database {
       request_type: RequestType;
       request_status: RequestStatus;
       poc_outcome: PocOutcome;
+      poc_priority: PocPriority;
       import_job_status: ImportJobStatus;
       plan_tier: PlanTier;
     };

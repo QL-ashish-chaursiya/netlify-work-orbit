@@ -26,7 +26,7 @@ export function NotificationBell() {
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 p-2">
-        <NotificationList />
+        <NotificationList unreadOnly />
       </PopoverContent>
     </Popover>
   );

@@ -36,6 +36,7 @@ export type DecisionInput = z.infer<typeof decisionSchema>;
 export interface ExpertiseSearchFilters {
   skillId?: string;
   minExperience?: number;
+  maxExperience?: number;
   maxUtilization?: number;
 }
 
@@ -56,4 +57,11 @@ export interface ExpertiseSearchResult {
   skills: ProfileSkillRow[];
   utilizationPercent: number;
   isOverAllocated: boolean;
+  // Highest experience_years across this profile's (filtered) skills — the
+  // schema has no standalone "years of experience" field on profiles.
+  experienceYears: number | null;
+  // Earliest planned_release_date/expected_completion_date among this
+  // profile's active allocations — only meaningful (and only surfaced in the
+  // UI) once they're at/over 100% utilization.
+  availableFrom: string | null;
 }

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useAuthSession } from "@/features/auth/hooks/useAuthSession";
 import "./LandingPage.css";
 
@@ -104,7 +104,7 @@ function OrbitMark({ className }: { className?: string }) {
 }
 
 export function LandingPage() {
-  const { data: session, isLoading } = useAuthSession();
+  const { data: session } = useAuthSession();
   const rootRef = useRef<HTMLDivElement>(null);
   const orbitRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -263,11 +263,6 @@ export function LandingPage() {
     };
   }, []);
 
-  // Already signed in? Skip the marketing page, go straight to the app.
-  if (!isLoading && session) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
   return (
     <div className="wo-landing" ref={rootRef}>
       <div className="scroll-progress" style={{ width: `${scrollProgress}%` }} />
@@ -313,12 +308,20 @@ export function LandingPage() {
               ))}
             </div>
             <div className="nav-cta">
-              <Link className="signin" to="/login">
-                Sign in
-              </Link>
-              <Link className="btn btn-primary btn-sm" to="/signup">
-                Request a Demo
-              </Link>
+              {session ? (
+                <Link className="btn btn-primary btn-sm" to="/dashboard">
+                  Dashboard
+                </Link>
+              ) : (
+                <>
+                  <Link className="signin" to="/login">
+                    Sign in
+                  </Link>
+                  <Link className="btn btn-primary btn-sm" to="/signup">
+                    Request a Demo
+                  </Link>
+                </>
+              )}
             </div>
           </nav>
         </div>
