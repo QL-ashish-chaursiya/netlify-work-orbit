@@ -3,9 +3,11 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { DatePicker } from "@/components/ui/date-picker";
 import { PROJECT_STATUS_TONE, humanizeEnum } from "@/lib/status-badges";
 import { useUpdateProjectStatus } from "@/features/projects/hooks/useUpdateProjectStatus";
 import { useProjectActiveAllocationCount } from "@/features/projects/hooks/useProjectActiveAllocationCount";
+import { useMarkProjectForRelease } from "@/features/release-planning/hooks/useMarkProjectForRelease";
 import type { ProjectStatus, Tables } from "@/lib/database.types";
 import { cn } from "@/lib/utils";
 
@@ -19,8 +21,11 @@ interface ProjectStatusStepperProps {
 
 export function ProjectStatusStepper({ project }: ProjectStatusStepperProps) {
   const updateStatus = useUpdateProjectStatus();
+  const markProjectForRelease = useMarkProjectForRelease();
   const { data: activeAllocationCount = 0 } = useProjectActiveAllocationCount(project.id);
   const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
+  const [releaseDatePickerOpen, setReleaseDatePickerOpen] = useState(false);
+  const [releaseDate, setReleaseDate] = useState("");
 
   const currentIndex = LIFECYCLE_STAGES.indexOf(project.status);
   const isTerminal = project.status === "closed" || project.status === "cancelled";
@@ -37,6 +42,12 @@ export function ProjectStatusStepper({ project }: ProjectStatusStepperProps) {
 
   async function handleAdvance() {
     if (!nextStage || blockedByActiveAllocations) return;
+    // Moving into Releasing needs a planned release date first — open the
+    // inline picker instead of transitioning immediately.
+    if (nextStage === "releasing") {
+      setReleaseDatePickerOpen(true);
+      return;
+    }
     try {
       await updateStatus.mutateAsync({ id: project.id, status: nextStage, organizationId: project.organization_id });
       toast.success(`Project moved to ${humanizeEnum(nextStage)}.`);
@@ -44,6 +55,23 @@ export function ProjectStatusStepper({ project }: ProjectStatusStepperProps) {
       // Surfaces the trigger's message verbatim if the DB-side guard fires
       // despite the UI-side check (e.g. a stale allocation count).
       toast.error(err instanceof Error ? err.message : "Could not update project status");
+    }
+  }
+
+  // Marks every currently-active allocation on this project planned_for_release
+  // with the chosen date, then moves the project itself into Releasing — so
+  // the whole team on this project shows up on the Release Calendar and
+  // Planned Releases list together, in one action.
+  async function handleConfirmReleaseTransition() {
+    if (!releaseDate) return;
+    try {
+      await markProjectForRelease.mutateAsync({ projectId: project.id, planned_release_date: releaseDate });
+      await updateStatus.mutateAsync({ id: project.id, status: "releasing", organizationId: project.organization_id });
+      toast.success(`Project moved to Releasing — active allocations planned for release on ${releaseDate}.`);
+      setReleaseDatePickerOpen(false);
+      setReleaseDate("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not move project to Releasing");
     }
   }
 
@@ -102,6 +130,39 @@ export function ProjectStatusStepper({ project }: ProjectStatusStepperProps) {
               Cannot close — {activeAllocationCount} allocation{activeAllocationCount === 1 ? "" : "s"} still active.
             </p>
           )}
+        </div>
+      )}
+
+      {releaseDatePickerOpen && (
+        <div className="space-y-3 rounded-md border bg-muted/30 p-3">
+          <div>
+            <p className="text-sm font-medium">Planned release date</p>
+            <p className="text-sm text-muted-foreground">
+              Every currently active allocation on this project will be marked planned for release on this date, and
+              will appear on the Release Calendar and Planned Releases list.
+            </p>
+          </div>
+          <DatePicker value={releaseDate} onChange={setReleaseDate} className="max-w-xs" />
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              onClick={handleConfirmReleaseTransition}
+              disabled={!releaseDate || updateStatus.isPending || markProjectForRelease.isPending}
+            >
+              {updateStatus.isPending || markProjectForRelease.isPending ? "Saving…" : "Confirm"}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setReleaseDatePickerOpen(false);
+                setReleaseDate("");
+              }}
+              disabled={updateStatus.isPending || markProjectForRelease.isPending}
+            >
+              Cancel
+            </Button>
+          </div>
         </div>
       )}
 

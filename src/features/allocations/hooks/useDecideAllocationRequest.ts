@@ -12,18 +12,26 @@ interface DecideInput {
   decision_notes?: string;
 }
 
-// Approve/reject a request. RLS (0002_supplementary_rls_and_guards.sql,
-// requests_update_approver) blocks the update entirely when requested_by =
-// auth.uid(), even for an Admin/RM — that shows up here as zero rows coming
-// back from `.select().single()`, not a thrown error, so we detect that
-// specifically and surface a clear message rather than a silent no-op.
+// Approve/reject a request. RLS (requests_update_approver, most recently
+// 0011_admin_self_approval_allowed.sql) blocks a requester from deciding
+// their own request UNLESS they're Admin — Admin can decide any request in
+// their org, including one they raised themselves; Resource Manager (or a
+// routed_to approver) still cannot. Depending on exactly which rows/columns
+// are touched, a blocked self-decide can surface two different ways: a
+// silent "zero rows" result from `.select().single()` (Postgres error
+// PGRST116), or an explicit RLS violation on the UPDATE itself (Postgres
+// error 42501) — both mean the same thing here, so both get the same
+// friendly message instead of a raw error.
 export function useDecideAllocationRequest() {
-  const { profile } = useAuthRole();
+  const { profile, hasRole } = useAuthRole();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ request, decision, decision_notes }: DecideInput) => {
       if (!profile) throw new Error("Not authenticated");
+      if (request.requested_by === profile.id && !hasRole("admin")) {
+        throw new Error(SELF_APPROVAL_MESSAGE);
+      }
 
       const { data: updated, error: updateError } = await supabase
         .from("allocation_requests")
@@ -38,7 +46,7 @@ export function useDecideAllocationRequest() {
         .single();
 
       if (updateError) {
-        if (updateError.code === "PGRST116") {
+        if (updateError.code === "PGRST116" || updateError.code === "42501") {
           throw new Error(SELF_APPROVAL_MESSAGE);
         }
         throw updateError;
@@ -101,7 +109,7 @@ export function useRequestMoreInfo() {
         .single();
 
       if (error) {
-        if (error.code === "PGRST116") {
+        if (error.code === "PGRST116" || error.code === "42501") {
           throw new Error(SELF_APPROVAL_MESSAGE);
         }
         throw error;

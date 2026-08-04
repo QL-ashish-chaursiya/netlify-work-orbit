@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { useAllocationsPlannedForRelease } from "@/features/release-planning/hooks/useAllocationsPlannedForRelease";
 import { useConfirmRelease } from "@/features/release-planning/hooks/useConfirmRelease";
 import { useExtendAllocation } from "@/features/release-planning/hooks/useExtendAllocation";
+import { useNotifyReleaseStakeholder } from "@/features/release-planning/hooks/useNotifyReleaseStakeholder";
 import {
   extendAllocationSchema,
   type AllocationWithNames,
@@ -52,6 +53,7 @@ function RowActions({ allocation }: { allocation: AllocationWithNames }) {
   const [extendOpen, setExtendOpen] = useState(false);
   const confirmRelease = useConfirmRelease();
   const extendAllocation = useExtendAllocation();
+  const notifyStakeholder = useNotifyReleaseStakeholder();
 
   const form = useForm<ExtendAllocationInput>({
     resolver: zodResolver(extendAllocationSchema),
@@ -78,6 +80,15 @@ function RowActions({ allocation }: { allocation: AllocationWithNames }) {
     }
   }
 
+  async function onNotify(target: "resource_manager" | "project_manager") {
+    try {
+      await notifyStakeholder.mutateAsync({ allocationId: allocation.id, target });
+      toast.success(`Notified the ${target === "resource_manager" ? "Resource Manager" : "Project Manager"}.`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not send notification");
+    }
+  }
+
   return (
     <div className="flex items-center gap-2">
       <Button size="sm" onClick={() => setConfirmOpen(true)}>
@@ -85,6 +96,22 @@ function RowActions({ allocation }: { allocation: AllocationWithNames }) {
       </Button>
       <Button size="sm" variant="outline" onClick={() => setExtendOpen(true)}>
         Extend
+      </Button>
+      <Button
+        size="sm"
+        variant="outline"
+        disabled={notifyStakeholder.isPending}
+        onClick={() => onNotify("resource_manager")}
+      >
+        Notify Resource Manager
+      </Button>
+      <Button
+        size="sm"
+        variant="outline"
+        disabled={notifyStakeholder.isPending}
+        onClick={() => onNotify("project_manager")}
+      >
+        Notify PM
       </Button>
 
       <ConfirmDialog

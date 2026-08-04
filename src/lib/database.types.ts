@@ -554,6 +554,10 @@ export interface Database {
         Args: { p_company_name: string; p_full_name: string };
         Returns: string;
       };
+      notify_release_stakeholder: {
+        Args: { p_allocation_id: string; p_target: "resource_manager" | "project_manager" };
+        Returns: void;
+      };
     };
     Enums: {
       user_role: UserRole;

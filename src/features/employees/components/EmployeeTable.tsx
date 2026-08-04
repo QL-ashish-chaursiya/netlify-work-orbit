@@ -16,6 +16,7 @@ import { ACCOUNT_STATUS_TONE, humanizeEnum } from "@/lib/status-badges";
 import { useEmployees } from "@/features/employees/hooks/useEmployees";
 import { useResendInvite } from "@/features/employees/hooks/useResendInvite";
 import { useDeactivateEmployee } from "@/features/employees/hooks/useDeactivateEmployee";
+import { useActivateEmployee } from "@/features/employees/hooks/useActivateEmployee";
 import type { Tables } from "@/lib/database.types";
 
 type Employee = Tables<"profiles">;
@@ -24,6 +25,7 @@ export function EmployeeTable() {
   const { data: employees, isLoading } = useEmployees();
   const resendInvite = useResendInvite();
   const deactivateEmployee = useDeactivateEmployee();
+  const activateEmployee = useActivateEmployee();
   const [deactivateTarget, setDeactivateTarget] = useState<Employee | null>(null);
 
   async function handleResendInvite(employee: Employee) {
@@ -32,6 +34,15 @@ export function EmployeeTable() {
       toast.success(`Invite re-sent to ${employee.email}.`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not resend invite");
+    }
+  }
+
+  async function handleActivate(employee: Employee) {
+    try {
+      await activateEmployee.mutateAsync(employee.id);
+      toast.success(`${employee.full_name} is now active.`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not activate employee");
     }
   }
 
@@ -84,6 +95,12 @@ export function EmployeeTable() {
                 onClick={() => handleResendInvite(employee)}
               >
                 Resend invite
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={employee.status === "active" || activateEmployee.isPending}
+                onClick={() => handleActivate(employee)}
+              >
+                Activate now
               </DropdownMenuItem>
               <DropdownMenuItem
                 disabled={employee.status === "deactivated"}

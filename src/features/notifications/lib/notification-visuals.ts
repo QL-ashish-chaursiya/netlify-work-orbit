@@ -17,7 +17,7 @@ const RULES: [test: (type: string) => boolean, icon: LucideIcon, tone: BadgeTone
   [(t) => t === "project_owner_added", FolderKanban, "purple"],
   [(t) => t === "reporting_manager_assigned", Users, "blue"],
   [(t) => t.startsWith("poc_"), Target, "purple"],
-  [(t) => t === "release_reminder", CalendarClock, "amber"],
+  [(t) => t.startsWith("release_reminder"), CalendarClock, "amber"],
 ];
 
 export function getNotificationVisual(type: string): NotificationVisual {
