@@ -14,15 +14,15 @@ interface Star {
 
 const NAV_LINKS = [
   { href: "#platform", label: "Platform" },
-  { href: "#solutions", label: "Solutions" },
-  { href: "#enterprise", label: "Enterprise" },
+  { href: "#roles", label: "Roles" },
+  { href: "#how-it-works", label: "How it works" },
 ];
 
 const FEATURES = [
   {
-    title: "AI Matching Engine",
+    title: "Live Resource Directory",
     description:
-      "Scores every available person against every open requirement — skills, timezone, cost, and prior outcomes — and ranks the best fit in milliseconds.",
+      "Search everyone in your org by skill, experience band, and current utilization to see who's actually free right now, not who was free when the spreadsheet was last updated.",
     icon: (
       <svg width="18" height="18" viewBox="0 0 18 18">
         <circle cx="9" cy="9" r="3" fill="#5B93FF" />
@@ -32,7 +32,7 @@ const FEATURES = [
   },
   {
     title: "Real-Time Allocation",
-    description: "Utilization updates the instant work moves. See exactly who's on what, right now, without waiting on a weekly refresh.",
+    description: "The moment a request is approved, the allocation goes live. Utilization, the release calendar, and the Bench Report all update immediately, with no second system to reconcile.",
     icon: (
       <svg width="18" height="18" viewBox="0 0 18 18">
         <rect x="2.5" y="2.5" width="13" height="13" rx="3" fill="none" stroke="#5B93FF" strokeWidth="1.4" />
@@ -41,8 +41,8 @@ const FEATURES = [
     ),
   },
   {
-    title: "Predictive Bench Planning",
-    description: "Forecasts bench risk weeks out and surfaces the next best engagement for each person before they go idle.",
+    title: "Bench Visibility, Not Guesswork",
+    description: "Every organization sets its own idle threshold. Anyone who drops below it shows up on the Bench Report with their skills and last project attached, before they've been idle long enough to notice.",
     icon: (
       <svg width="18" height="18" viewBox="0 0 18 18">
         <path d="M3 14l4-5 3 3 5-7" stroke="#5B93FF" strokeWidth="1.6" fill="none" strokeLinecap="round" strokeLinejoin="round" />
@@ -50,8 +50,8 @@ const FEATURES = [
     ),
   },
   {
-    title: "Enterprise-Grade Security",
-    description: "SOC 2 Type II, SSO/SCIM, and granular role-based access — built to sit inside regulated environments from day one.",
+    title: "Role-Based Access, By Design",
+    description: "Six built-in roles: Admin, Resource Manager, Project Manager, Tech Lead, Sales Lead, and Team Member. Each one sees exactly what their job requires, with every organization's data isolated at the database layer.",
     icon: (
       <svg width="18" height="18" viewBox="0 0 18 18">
         <path d="M9 2l6 2.5v4c0 4-2.6 6.7-6 7.5-3.4-.8-6-3.5-6-7.5v-4L9 2z" fill="none" stroke="#5B93FF" strokeWidth="1.4" />
@@ -60,25 +60,34 @@ const FEATURES = [
   },
 ];
 
+const ROLES = [
+  { role: "Admin", body: "Full visibility across the organization: every project, every allocation, every approval." },
+  { role: "Resource Manager", body: "Owns the Approval Queue, arbitrates conflicts, and keeps utilization and Bench Reports honest." },
+  { role: "Project Manager", body: "Builds role requirements, raises allocation requests, and moves projects through their lifecycle." },
+  { role: "Tech Lead", body: "Searches for the right skills and keeps track of who's assigned to their team's work." },
+  { role: "Sales Lead", body: "Logs POCs, tracks outcomes, and converts a closed-won opportunity straight into a project." },
+  { role: "Team Member", body: "Sees their own assignments, upcoming releases, and profile, and nothing more." },
+];
+
 const STATS: { count: number; suffix: string; decimals: number; label: string }[] = [
-  { count: 38, suffix: "%", decimals: 0, label: "Faster allocation cycles" },
-  { count: 12000, suffix: "+", decimals: 0, label: "Resources orchestrated daily" },
-  { count: 99.95, suffix: "%", decimals: 2, label: "Platform uptime SLA" },
-  { count: 4.2, suffix: "×", decimals: 1, label: "Average first-year ROI" },
+  { count: 6, suffix: "", decimals: 0, label: "Role-based dashboards, one per seat" },
+  { count: 5, suffix: "", decimals: 0, label: "Project lifecycle stages, Draft through Closed" },
+  { count: 3, suffix: "", decimals: 0, label: "Ways an allocation winds down: release, extend, or reassign" },
+  { count: 1, suffix: "", decimals: 0, label: "Approval Queue for every request, org-wide" },
 ];
 
 const POINTS = [
   {
-    title: "Continuous scoring.",
-    body: "Every open requirement is re-scored against the full bench in real time, not on a batch schedule.",
+    title: "Requests are checked before they collide.",
+    body: "Raise an allocation request and WorkOrbit checks it against existing commitments. Overlapping demand on the same person is flagged automatically, before it becomes a scheduling conflict.",
   },
   {
-    title: "Automatic reallocation.",
-    body: "When priorities shift, WorkOrbit proposes the next-best move instead of waiting for a manager to notice.",
+    title: "Approvals sit with the people accountable.",
+    body: "Resource Managers and Admins clear requests from a single Approval Queue. Self-approval is blocked by design: no one signs off on their own request.",
   },
   {
-    title: "Learns from outcomes.",
-    body: "Placement results feed back into the model, so match quality improves with every project you run.",
+    title: "Nobody goes looking for updates.",
+    body: "Approvals, new assignments, upcoming releases, and POC outcomes each push an in-app notification the moment they happen, straight to the person it affects.",
   },
 ];
 
@@ -312,14 +321,9 @@ export function LandingPage() {
                   Dashboard
                 </Link>
               ) : (
-                <>
-                  <Link className="signin" to="/login">
-                    Sign in
-                  </Link>
-                  <Link className="btn btn-primary btn-sm" to="/signup">
-                    Request a Demo
-                  </Link>
-                </>
+                <Link className="signin" to="/login">
+                  Sign in
+                </Link>
               )}
             </div>
           </nav>
@@ -330,33 +334,20 @@ export function LandingPage() {
         <div className="wrap">
           <div className="hero-grid">
             <div>
-              <div className="eyebrow">AI WORKFORCE ORCHESTRATION</div>
+              <div className="eyebrow">WORKFORCE ORCHESTRATION PLATFORM</div>
               <h1>
                 Keep Your
                 <br />
                 Workforce <span className="accent">in Motion</span>
               </h1>
               <p className="sub">
-                WorkOrbit's AI engine matches people to work the moment it appears — allocating skills in real time so
-                nothing stalls, no one sits idle, and every engagement starts fully staffed.
+                One live view of who's allocated, who's free, and what's coming next, so staffing decisions stop
+                happening in spreadsheets and side conversations, and every project starts fully staffed.
               </p>
               <div className="hero-ctas">
-                <Link className="btn btn-primary" to="/signup">
-                  Request a Demo
-                </Link>
-                <a className="btn btn-ghost" href="#platform">
-                  Watch Platform Overview
+                <a className="btn btn-primary" href="#how-it-works">
+                  See How It Works
                 </a>
-              </div>
-              <div className="trust">
-                <span className="label">Orchestrating workforces at</span>
-                <div className="clients">
-                  <div>Northbridge</div>
-                  <div>Arcadia Systems</div>
-                  <div>Veridian Health</div>
-                  <div>Solace Financial</div>
-                  <div>Kestrel Logistics</div>
-                </div>
               </div>
             </div>
 
@@ -419,10 +410,10 @@ export function LandingPage() {
         <div className="wrap">
           <div className="section-head reveal">
             <div className="eyebrow">THE PLATFORM</div>
-            <h2>One engine. Every allocation decision.</h2>
+            <h2>One system. Every allocation decision.</h2>
             <p>
-              WorkOrbit sits underneath your delivery, sales, and HR systems — reading capacity and demand
-              continuously so you never have to reconcile spreadsheets to know who's available.
+              WorkOrbit replaces the spreadsheet-and-email version of staffing with one shared system. Role
+              requirements, requests, approvals, and releases all live in the same place your team already works in.
             </p>
           </div>
 
@@ -432,6 +423,25 @@ export function LandingPage() {
                 <div className="feature-icon">{f.icon}</div>
                 <h3>{f.title}</h3>
                 <p>{f.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="roles">
+        <div className="wrap">
+          <div className="section-head reveal">
+            <div className="eyebrow">BUILT FOR EVERY SEAT</div>
+            <h2>Everyone sees exactly what their job needs</h2>
+            <p>Six roles, six purpose-built views, and no one wades through screens meant for someone else's job.</p>
+          </div>
+
+          <div className="role-grid stagger">
+            {ROLES.map((r) => (
+              <div key={r.role} className="role-card reveal-item">
+                <h3>{r.role}</h3>
+                <p>{r.body}</p>
               </div>
             ))}
           </div>
@@ -453,12 +463,12 @@ export function LandingPage() {
         </div>
       </div>
 
-      <section id="enterprise">
+      <section id="how-it-works">
         <div className="wrap">
           <div className="deepdive">
             <div className="reveal">
-              <div className="eyebrow">HOW THE AI WORKS</div>
-              <h2 style={{ fontSize: 32, marginTop: 16 }}>An orchestration layer that never sleeps</h2>
+              <div className="eyebrow">HOW IT WORKS</div>
+              <h2 style={{ fontSize: 32, marginTop: 16 }}>One workflow, from request to release</h2>
               <div className="point-list">
                 {POINTS.map((pt) => (
                   <div key={pt.title} className="point">
@@ -509,14 +519,21 @@ export function LandingPage() {
               GET STARTED
             </div>
             <h2 style={{ marginTop: 16 }}>Ready to put your workforce in motion?</h2>
-            <p>Talk to our team about rolling WorkOrbit out across your delivery organization.</p>
+            <p>
+              {session
+                ? "Jump back into your dashboard and keep your workforce moving."
+                : "Sign in and see WorkOrbit running against your own team's setup."}
+            </p>
             <div className="hero-ctas">
-              <Link className="btn btn-primary" to="/signup">
-                Request a Demo
-              </Link>
-              <Link className="btn btn-ghost" to="/signup">
-                Talk to Sales
-              </Link>
+              {session ? (
+                <Link className="btn btn-primary" to="/dashboard">
+                  Dashboard
+                </Link>
+              ) : (
+                <Link className="btn btn-primary" to="/login">
+                  Sign In
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -532,33 +549,21 @@ export function LandingPage() {
                   Work<b>Orbit</b>
                 </div>
               </div>
-              <p>AI workforce orchestration for enterprises that can't afford idle time or missed deadlines.</p>
+              <p>Workforce orchestration for teams that can't afford idle time or missed deadlines.</p>
             </div>
             <div className="footer-col">
-              <h4>Product</h4>
-              <a href="#">Platform</a>
-              <a href="#">AI Matching</a>
-              <a href="#">Allocation</a>
-              <a href="#">Bench Planning</a>
+              <h4>Platform</h4>
+              <a href="#platform">Platform</a>
+              <a href="#roles">Roles</a>
+              <a href="#how-it-works">How it works</a>
             </div>
             <div className="footer-col">
-              <h4>Company</h4>
-              <a href="#">About</a>
-              <a href="#">Careers</a>
-              <a href="#">Customers</a>
-              <a href="#">Contact</a>
-            </div>
-            <div className="footer-col">
-              <h4>Resources</h4>
-              <a href="#">Documentation</a>
-              <a href="#">Security</a>
-              <a href="#">Status</a>
-              <a href="#">Support</a>
+              <h4>Account</h4>
+              <Link to="/login">Sign in</Link>
             </div>
           </div>
           <div className="footer-bottom">
             <div>© 2026 WorkOrbit. All rights reserved.</div>
-            <div>Privacy Policy · Terms of Service</div>
           </div>
         </div>
       </footer>
