@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,11 +12,19 @@ import { ProjectOwnersList } from "@/features/projects/components/ProjectOwnersL
 import { RoleRequirementsList } from "@/features/projects/components/RoleRequirementsList";
 import { RoleRequirementForm } from "@/features/projects/components/RoleRequirementForm";
 import { AllocationsForProject } from "@/features/allocations/components/AllocationsForProject";
+import { useOrgProfiles } from "@/features/projects/hooks/useOrgProfiles";
 
 export function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { data: project, isLoading } = useProject(id);
+  const { data: orgProfiles } = useOrgProfiles("");
   const [roleFormOpen, setRoleFormOpen] = useState(false);
+
+  const profileNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const profile of orgProfiles ?? []) map.set(profile.id, profile.full_name);
+    return map;
+  }, [orgProfiles]);
 
   if (isLoading) {
     return (
@@ -50,6 +58,13 @@ export function ProjectDetailPage() {
           </p>
           <p className="text-sm text-muted-foreground">
             {project.planned_start_date ?? "No start date"} – {project.planned_end_date ?? "No end date"}
+          </p>
+          {project.description ? <p className="max-w-3xl text-sm text-muted-foreground">{project.description}</p> : null}
+          <p className="text-sm text-muted-foreground">
+            Project manager: {project.project_manager_id ? profileNameById.get(project.project_manager_id) ?? "Unknown" : "Not set"}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Resource manager: {project.resource_manager_id ? profileNameById.get(project.resource_manager_id) ?? "Unknown" : "Not set"}
           </p>
         </div>
       </div>

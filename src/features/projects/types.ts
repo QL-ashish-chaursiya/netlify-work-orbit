@@ -1,12 +1,16 @@
 import { z } from "zod";
 
-// Business function / dates are optional at creation time — a PM may not know
-// them yet when spinning up a Draft project (BRD §5 Phase 3).
+const emptyToUndefined = (val: unknown) => (typeof val === "string" && val.trim() === "" ? undefined : val);
+
+// New projects can be created without dates, but they now capture a short
+// description plus assigned PM / RM ownership up front.
 export const createProjectSchema = z.object({
   name: z.string().min(2, "Project name is required"),
   code: z.string().optional(),
   client_name: z.string().optional(),
-  business_function_id: z.string().uuid().optional(),
+  description: z.preprocess(emptyToUndefined, z.string().trim().optional()),
+  project_manager_id: z.preprocess(emptyToUndefined, z.string().uuid().optional()),
+  resource_manager_id: z.preprocess(emptyToUndefined, z.string().uuid().optional()),
   planned_start_date: z.string().optional(),
   planned_end_date: z.string().optional(),
 });

@@ -22,21 +22,22 @@ export function useCreateAllocationRequest() {
       if (!profile) throw new Error("Not authenticated");
 
       const requestedProfileId = input.requested_profile_id ?? null;
-      const requirementId = input.requirement_id ?? null;
+      const routedTo = input.resource_manager_id ?? null;
       const endDate = input.end_date ?? null;
 
-      // Routing: no formal "who is this profile's RM" lookup exists beyond
-      // reporting_manager_id, so route there when we have a concrete target;
-      // otherwise leave routed_to null so any Admin/RM can pick it up.
-      let routedTo: string | null = null;
-      if (requestedProfileId) {
+      // Routing: prefer an explicitly selected resource manager. If none is
+      // chosen, route to the requested resource's reporting manager when we
+      // have a concrete target; otherwise leave routed_to null so any
+      // Admin/RM can pick it up.
+      let finalRoutedTo: string | null = routedTo;
+      if (!finalRoutedTo && requestedProfileId) {
         const { data: targetProfile, error: targetError } = await supabase
           .from("profiles")
           .select("reporting_manager_id")
           .eq("id", requestedProfileId)
           .single();
         if (targetError) throw targetError;
-        routedTo = targetProfile?.reporting_manager_id ?? null;
+        finalRoutedTo = targetProfile?.reporting_manager_id ?? null;
       }
 
       // Conflict detection: overlapping-date allocations/requests on the same
@@ -84,7 +85,6 @@ export function useCreateAllocationRequest() {
         organization_id: profile.organization_id,
         project_id: input.project_id,
         requested_profile_id: requestedProfileId,
-        requirement_id: requirementId,
         requested_by: profile.id,
         request_type: input.request_type,
         allocation_percent: input.allocation_percent,
@@ -92,7 +92,7 @@ export function useCreateAllocationRequest() {
         end_date: endDate,
         justification: input.justification || null,
         status: isConflict ? "conflict_flagged" : "pending",
-        routed_to: routedTo,
+        routed_to: finalRoutedTo,
       };
 
       const { data: newRequest, error: insertError } = await supabase

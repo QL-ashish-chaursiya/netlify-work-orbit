@@ -16,7 +16,6 @@ const NAV_LINKS = [
   { href: "#platform", label: "Platform" },
   { href: "#solutions", label: "Solutions" },
   { href: "#enterprise", label: "Enterprise" },
-  { href: "#pricing", label: "Pricing" },
 ];
 
 const FEATURES = [

@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuthRole } from "@/features/auth/hooks/useAuthSession";
 import type { Tables } from "@/lib/database.types";
 
-export type OrgProfileOption = Pick<Tables<"profiles">, "id" | "full_name" | "email">;
+export type OrgProfileOption = Pick<Tables<"profiles">, "id" | "full_name" | "email" | "designation" | "primary_role" | "status">;
 
 // Backs the "add owner" profile-search picker on ProjectOwnersList.
 // RLS (`profiles_select`) already scopes this to the caller's organization.
@@ -14,7 +14,7 @@ export function useOrgProfiles(search: string) {
   return useQuery({
     queryKey: ["org-profiles", orgId, search] as const,
     queryFn: async (): Promise<OrgProfileOption[]> => {
-      let query = supabase.from("profiles").select("id, full_name, email").order("full_name");
+      let query = supabase.from("profiles").select("id, full_name, email, designation, primary_role, status").order("full_name");
       if (search.trim()) {
         query = query.ilike("full_name", `%${search.trim()}%`);
       }

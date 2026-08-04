@@ -149,7 +149,10 @@ export interface Database {
           name: string;
           code: string | null;
           client_name: string | null;
+          description: string | null;
           business_function_id: string | null;
+          project_manager_id: string | null;
+          resource_manager_id: string | null;
           status: ProjectStatus;
           planned_start_date: string | null;
           planned_end_date: string | null;
@@ -166,7 +169,10 @@ export interface Database {
           name: string;
           code?: string | null;
           client_name?: string | null;
+          description?: string | null;
           business_function_id?: string | null;
+          project_manager_id?: string | null;
+          resource_manager_id?: string | null;
           status?: ProjectStatus;
           planned_start_date?: string | null;
           planned_end_date?: string | null;

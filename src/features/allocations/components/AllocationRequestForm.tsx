@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -21,13 +20,13 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { allocationRequestSchema, type AllocationRequestInput } from "@/features/allocations/types";
 import { useCreateAllocationRequest } from "@/features/allocations/hooks/useCreateAllocationRequest";
-import { useProfileOptions, useProjectOptions, useRoleRequirementOptions, useSkillOptions } from "@/features/allocations/hooks/useLookups";
+import { useProfileOptions, useProjectOptions } from "@/features/allocations/hooks/useLookups";
 
 // Sentinel for the shadcn/Radix Select — Radix reserves an empty string to
 // mean "clear the selection", so "leave unset" needs a real string value that
 // we translate back to `undefined` on submit.
 const OPEN_ROLE_SENTINEL = "__open__";
-const NO_REQUIREMENT_SENTINEL = "__none__";
+const NO_RESOURCE_MANAGER_SENTINEL = "__none__";
 
 interface AllocationRequestFormProps {
   trigger?: React.ReactNode;
@@ -40,14 +39,13 @@ export function AllocationRequestForm({ trigger, defaultProjectId, defaultProfil
   const createRequest = useCreateAllocationRequest();
   const { data: projects } = useProjectOptions();
   const { data: profiles } = useProfileOptions();
-  const { data: skills } = useSkillOptions();
 
   const form = useForm<AllocationRequestInput>({
     resolver: zodResolver(allocationRequestSchema),
     defaultValues: {
       project_id: defaultProjectId ?? "",
       requested_profile_id: defaultProfileId,
-      requirement_id: undefined,
+      resource_manager_id: undefined,
       request_type: "hard_allocation",
       allocation_percent: 100,
       start_date: "",
@@ -56,12 +54,9 @@ export function AllocationRequestForm({ trigger, defaultProjectId, defaultProfil
     },
   });
 
-  const selectedProjectId = form.watch("project_id");
-  const isOpenRole = form.watch("requested_profile_id") === undefined;
-  const selectedRequirementId = form.watch("requirement_id");
-  const { data: roleRequirements } = useRoleRequirementOptions(selectedProjectId || undefined);
-  const skillMap = new Map((skills ?? []).map((s) => [s.id, s.name]));
-  const selectedRequirement = roleRequirements?.find((r) => r.id === selectedRequirementId);
+  const resourceManagerOptions = (profiles ?? []).filter(
+    (p) => p.status === "active" && p.primary_role === "resource_manager",
+  );
 
   async function onSubmit(values: AllocationRequestInput) {
     try {
@@ -74,7 +69,7 @@ export function AllocationRequestForm({ trigger, defaultProjectId, defaultProfil
       form.reset({
         project_id: defaultProjectId ?? "",
         requested_profile_id: defaultProfileId,
-        requirement_id: undefined,
+        resource_manager_id: undefined,
         request_type: "hard_allocation",
         allocation_percent: 100,
         start_date: "",
@@ -100,10 +95,7 @@ export function AllocationRequestForm({ trigger, defaultProjectId, defaultProfil
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Raise an allocation request</DialogTitle>
-          <DialogDescription>
-            Request a hard allocation or soft reservation for a project. Leave the resource unset to ask for
-            "anyone matching" an open role requirement.
-          </DialogDescription>
+          <DialogDescription>Request a hard allocation or soft reservation for a project.</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -185,46 +177,35 @@ export function AllocationRequestForm({ trigger, defaultProjectId, defaultProfil
               )}
             />
 
-            {isOpenRole && (
-              <FormField
-                control={form.control}
-                name="requirement_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Open role requirement</FormLabel>
-                    <Select
-                      value={field.value ?? NO_REQUIREMENT_SENTINEL}
-                      onValueChange={(value) => field.onChange(value === NO_REQUIREMENT_SENTINEL ? undefined : value)}
-                      disabled={!selectedProjectId}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="No specific requirement" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value={NO_REQUIREMENT_SENTINEL}>No specific requirement</SelectItem>
-                        {(roleRequirements ?? []).map((req) => (
-                          <SelectItem key={req.id} value={req.id}>
-                            {req.title}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {selectedRequirement && selectedRequirement.required_skills.length > 0 && (
-                      <div className="flex flex-wrap gap-1 pt-1">
-                        {selectedRequirement.required_skills.map((skillId) => (
-                          <Badge key={skillId} variant="secondary">
-                            {skillMap.get(skillId) ?? "Unknown skill"}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+            <FormField
+              control={form.control}
+              name="resource_manager_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Resource manager</FormLabel>
+                  <Select
+                    value={field.value ?? NO_RESOURCE_MANAGER_SENTINEL}
+                    onValueChange={(value) => field.onChange(value === NO_RESOURCE_MANAGER_SENTINEL ? undefined : value)}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a resource manager" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value={NO_RESOURCE_MANAGER_SENTINEL}>No resource manager</SelectItem>
+                      {resourceManagerOptions.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.full_name}
+                          {p.designation ? ` — ${p.designation}` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <div className="grid grid-cols-2 gap-4">
               <FormField

@@ -14,7 +14,7 @@ export const allocationRequestSchema = z.object({
   // null / absent means "anyone matching skill X" per schema.sql comment on
   // allocation_requests.requested_profile_id.
   requested_profile_id: optionalUuid,
-  requirement_id: optionalUuid,
+  resource_manager_id: optionalUuid,
   request_type: z.enum(REQUEST_TYPE_OPTIONS),
   allocation_percent: z.coerce
     .number({ invalid_type_error: "Enter a percentage" })

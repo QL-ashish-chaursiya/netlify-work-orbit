@@ -1,8 +1,10 @@
+import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
   Dialog,
@@ -16,9 +18,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createProjectSchema, type CreateProjectInput } from "@/features/projects/types";
 import { useCreateProject } from "@/features/projects/hooks/useCreateProject";
-import { useBusinessFunctions } from "@/features/org/hooks/useBusinessFunctions";
+import { useOrgProfiles, type OrgProfileOption } from "@/features/projects/hooks/useOrgProfiles";
 
-const NO_BUSINESS_FUNCTION = "none";
+const NO_MANAGER = "none";
 
 interface ProjectFormProps {
   open: boolean;
@@ -29,7 +31,7 @@ interface ProjectFormProps {
 // New Project dialog. Projects always start in `draft` status (server-side
 // default + set explicitly in useCreateProject) — no status field here.
 export function ProjectForm({ open, onOpenChange, onCreated }: ProjectFormProps) {
-  const { data: businessFunctions } = useBusinessFunctions();
+  const { data: orgProfiles } = useOrgProfiles("");
   const createProject = useCreateProject();
 
   const form = useForm<CreateProjectInput>({
@@ -38,11 +40,26 @@ export function ProjectForm({ open, onOpenChange, onCreated }: ProjectFormProps)
       name: "",
       code: "",
       client_name: "",
-      business_function_id: undefined,
+      description: "",
+      project_manager_id: undefined,
+      resource_manager_id: undefined,
       planned_start_date: "",
       planned_end_date: "",
     },
   });
+
+  const projectManagerOptions = useMemo(
+    () => (orgProfiles ?? []).filter((profile) => profile.status === "active" && profile.primary_role === "project_manager"),
+    [orgProfiles],
+  );
+  const resourceManagerOptions = useMemo(
+    () => (orgProfiles ?? []).filter((profile) => profile.status === "active" && profile.primary_role === "resource_manager"),
+    [orgProfiles],
+  );
+
+  function formatPersonLabel(profile: OrgProfileOption) {
+    return profile.designation?.trim() ? `${profile.full_name} (${profile.designation})` : `${profile.full_name} (${profile.email})`;
+  }
 
   async function onSubmit(values: CreateProjectInput) {
     try {
@@ -117,32 +134,69 @@ export function ProjectForm({ open, onOpenChange, onCreated }: ProjectFormProps)
             </div>
             <FormField
               control={form.control}
-              name="business_function_id"
+              name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Business function</FormLabel>
-                  <Select
-                    value={field.value ?? NO_BUSINESS_FUNCTION}
-                    onValueChange={(value) => field.onChange(value === NO_BUSINESS_FUNCTION ? undefined : value)}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a business function" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value={NO_BUSINESS_FUNCTION}>No business function</SelectItem>
-                      {businessFunctions?.map((bf) => (
-                        <SelectItem key={bf.id} value={bf.id}>
-                          {bf.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Short project summary, scope, or goals" rows={4} {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="project_manager_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Project manager</FormLabel>
+                    <Select value={field.value ?? NO_MANAGER} onValueChange={(value) => field.onChange(value === NO_MANAGER ? undefined : value)}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a project manager" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value={NO_MANAGER}>No project manager</SelectItem>
+                        {projectManagerOptions.map((profile) => (
+                          <SelectItem key={profile.id} value={profile.id}>
+                            {formatPersonLabel(profile)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="resource_manager_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Resource manager</FormLabel>
+                    <Select value={field.value ?? NO_MANAGER} onValueChange={(value) => field.onChange(value === NO_MANAGER ? undefined : value)}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a resource manager" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value={NO_MANAGER}>No resource manager</SelectItem>
+                        {resourceManagerOptions.map((profile) => (
+                          <SelectItem key={profile.id} value={profile.id}>
+                            {formatPersonLabel(profile)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
