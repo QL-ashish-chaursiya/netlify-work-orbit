@@ -73,7 +73,7 @@ export function ConflictBanner({ request }: ConflictBannerProps) {
                 </div>
                 {canResolve && (
                   <Button size="sm" variant="outline" disabled={resolveConflict.isPending} onClick={() => handleResolve(c.id)}>
-                    Resolve
+                    Mark resolved
                   </Button>
                 )}
               </li>

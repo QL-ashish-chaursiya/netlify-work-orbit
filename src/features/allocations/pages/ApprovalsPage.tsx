@@ -2,14 +2,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ApprovalQueueTable } from "@/features/allocations/components/ApprovalQueueTable";
 import { ConflictBanner } from "@/features/allocations/components/ConflictBanner";
+import { ResolvedConflictsList } from "@/features/allocations/components/ResolvedConflictsList";
 import { AllocationRequestForm } from "@/features/allocations/components/AllocationRequestForm";
 import { useAllocationRequests } from "@/features/allocations/hooks/useAllocationRequests";
+import { useResolvedConflicts } from "@/features/allocations/hooks/useResolveConflict";
 import { useProfileOptions, useProjectOptions } from "@/features/allocations/hooks/useLookups";
 
 export function ApprovalsPage() {
   const { data: requests } = useAllocationRequests();
   const { data: profiles } = useProfileOptions();
   const { data: projects } = useProjectOptions();
+  const { data: resolvedConflicts } = useResolvedConflicts();
   const conflictedRequests = (requests ?? []).filter((r) => r.status === "conflict_flagged");
 
   return (
@@ -28,6 +31,9 @@ export function ApprovalsPage() {
         <TabsList>
           <TabsTrigger value="queue">Queue</TabsTrigger>
           <TabsTrigger value="conflicts">Conflicts{conflictedRequests.length > 0 ? ` (${conflictedRequests.length})` : ""}</TabsTrigger>
+          <TabsTrigger value="resolved">
+            Resolved{resolvedConflicts && resolvedConflicts.length > 0 ? ` (${resolvedConflicts.length})` : ""}
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="queue" className="mt-4">
           <ApprovalQueueTable />
@@ -51,6 +57,9 @@ export function ApprovalsPage() {
               </div>
             ))
           )}
+        </TabsContent>
+        <TabsContent value="resolved" className="mt-4">
+          <ResolvedConflictsList />
         </TabsContent>
       </Tabs>
     </div>

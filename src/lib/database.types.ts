@@ -558,6 +558,8 @@ export interface Database {
         Args: { p_allocation_id: string; p_target: "resource_manager" | "project_manager" };
         Returns: void;
       };
+      resolve_request_conflict: { Args: { p_conflict_id: string }; Returns: void };
+      reopen_request_conflict: { Args: { p_conflict_id: string }; Returns: void };
     };
     Enums: {
       user_role: UserRole;
