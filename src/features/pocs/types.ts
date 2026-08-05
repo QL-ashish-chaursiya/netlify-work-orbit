@@ -10,14 +10,17 @@ export const POC_OUTCOME_VALUES = ["pending", "closed_won", "closed_lost"] as co
 // database.types.ts's PocPriority union.
 export const POC_PRIORITY_VALUES = ["normal", "high", "urgent"] as const;
 
-// Log POC. Dates/business function/presales lead are optional at creation
-// time — a Sales Lead may log a POC before those details are pinned down.
+// Log POC. Dates/requirement/presales lead are optional at creation time —
+// a Sales Lead may log a POC before those details are pinned down.
 // No `outcome`/status field here by design: every new POC starts 'pending'
 // server-side (see useCreatePoc) — the create form never exposes it.
+// `business_function_id` is intentionally not collected here anymore — the
+// create form now takes a free-text `requirement` instead (migration 0013);
+// the column itself still exists for whatever already has it set.
 export const createPocSchema = z.object({
   client_name: z.string().min(2, "Client name is required"),
   opportunity_name: z.preprocess(emptyToUndefined, z.string().optional()),
-  business_function_id: z.preprocess(emptyToUndefined, z.string().uuid().optional()),
+  requirement: z.preprocess(emptyToUndefined, z.string().optional()),
   presales_lead_id: z.preprocess(emptyToUndefined, z.string().uuid().optional()),
   start_date: z.preprocess(emptyToUndefined, z.string().optional()),
   end_date: z.preprocess(emptyToUndefined, z.string().optional()),
@@ -36,6 +39,8 @@ export const pocMilestoneDraftSchema = z.object({
   frontend_days: z.coerce.number().min(0).default(0),
   pm_days: z.coerce.number().min(0).default(0),
   qa_days: z.coerce.number().min(0).default(0),
+  design_days: z.coerce.number().min(0).default(0),
+  devops_days: z.coerce.number().min(0).default(0),
 });
 export type PocMilestoneDraft = z.infer<typeof pocMilestoneDraftSchema>;
 

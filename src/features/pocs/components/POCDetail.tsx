@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { X } from "lucide-react";
+import { Paperclip, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -17,6 +17,7 @@ import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { POC_OUTCOME_TONE } from "@/lib/status-badges";
 import { usePoc } from "@/features/pocs/hooks/usePoc";
 import { usePocMilestones } from "@/features/pocs/hooks/usePocMilestones";
+import { getPocAttachmentUrl } from "@/features/pocs/hooks/useUploadPocAttachment";
 import { useSetPocOutcome } from "@/features/pocs/hooks/useSetPocOutcome";
 import { useAddPocResource } from "@/features/pocs/hooks/useAddPocResource";
 import { useRemovePocResource } from "@/features/pocs/hooks/useRemovePocResource";
@@ -97,6 +98,16 @@ export function POCDetail({ pocId }: POCDetailProps) {
     }
   }
 
+  async function onDownloadAttachment() {
+    if (!poc?.attachment_path) return;
+    try {
+      const url = await getPocAttachmentUrl(poc.attachment_path);
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not open the attachment");
+    }
+  }
+
   async function onConfirmRemove() {
     if (!removeTarget) return;
     try {
@@ -143,6 +154,10 @@ export function POCDetail({ pocId }: POCDetailProps) {
               <dd>{presalesLeadName ?? "—"}</dd>
             </div>
             <div>
+              <dt className="font-medium text-foreground">Requirement</dt>
+              <dd>{poc.requirement ?? "—"}</dd>
+            </div>
+            <div>
               <dt className="font-medium text-foreground">Priority</dt>
               <dd>{humanizeEnum(poc.priority)}</dd>
             </div>
@@ -159,6 +174,11 @@ export function POCDetail({ pocId }: POCDetailProps) {
               <dd>{new Date(poc.created_at).toLocaleDateString()}</dd>
             </div>
           </dl>
+          {poc.attachment_name && (
+            <Button variant="link" className="mt-1 h-auto p-0 text-sm" onClick={onDownloadAttachment}>
+              <Paperclip className="h-3.5 w-3.5" /> {poc.attachment_name}
+            </Button>
+          )}
           {poc.justification && (
             <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
               <span className="font-medium text-foreground">Justification: </span>
@@ -301,6 +321,8 @@ export function POCDetail({ pocId }: POCDetailProps) {
                     <th className="px-3 py-2 text-left font-semibold">Milestone / Feature</th>
                     <th className="px-3 py-2 text-right font-semibold">Backend</th>
                     <th className="px-3 py-2 text-right font-semibold">Frontend</th>
+                    <th className="px-3 py-2 text-right font-semibold">Design</th>
+                    <th className="px-3 py-2 text-right font-semibold">DevOps</th>
                     <th className="px-3 py-2 text-right font-semibold">PM</th>
                     <th className="px-3 py-2 text-right font-semibold">QA</th>
                     <th className="px-3 py-2 text-right font-semibold">Total</th>
@@ -312,10 +334,12 @@ export function POCDetail({ pocId }: POCDetailProps) {
                       <td className="px-3 py-2">{m.name}</td>
                       <td className="px-3 py-2 text-right">{m.backend_days}</td>
                       <td className="px-3 py-2 text-right">{m.frontend_days}</td>
+                      <td className="px-3 py-2 text-right">{m.design_days}</td>
+                      <td className="px-3 py-2 text-right">{m.devops_days}</td>
                       <td className="px-3 py-2 text-right">{m.pm_days}</td>
                       <td className="px-3 py-2 text-right">{m.qa_days}</td>
                       <td className="px-3 py-2 text-right font-medium">
-                        {m.backend_days + m.frontend_days + m.pm_days + m.qa_days}
+                        {m.backend_days + m.frontend_days + m.design_days + m.devops_days + m.pm_days + m.qa_days}
                       </td>
                     </tr>
                   ))}

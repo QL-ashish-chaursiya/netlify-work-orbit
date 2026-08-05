@@ -19,7 +19,7 @@ export function useCreatePoc() {
         organization_id: profile.organization_id,
         client_name: input.client_name,
         opportunity_name: input.opportunity_name ?? null,
-        business_function_id: input.business_function_id ?? null,
+        requirement: input.requirement ?? null,
         presales_lead_id: input.presales_lead_id ?? null,
         start_date: input.start_date ?? null,
         end_date: input.end_date ?? null,

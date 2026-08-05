@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { ChevronRight, Plus, X } from "lucide-react";
+import * as XLSX from "xlsx";
+import { ChevronRight, Download, Paperclip, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,10 +22,10 @@ import {
 } from "@/features/pocs/types";
 import { useCreatePoc } from "@/features/pocs/hooks/useCreatePoc";
 import { useCreatePocMilestones } from "@/features/pocs/hooks/usePocMilestones";
-import { useBusinessFunctions } from "@/features/org/hooks/useBusinessFunctions";
+import { useUploadPocAttachment } from "@/features/pocs/hooks/useUploadPocAttachment";
+import { useAuthRole } from "@/features/auth/hooks/useAuthSession";
 import { useEmployees } from "@/features/employees/hooks/useEmployees";
 
-const NO_BUSINESS_FUNCTION = "none";
 const NO_PRESALES_LEAD = "none";
 
 const PRIORITY_META: Record<(typeof POC_PRIORITY_VALUES)[number], { label: string; dot: string; active: string }> = {
@@ -36,40 +37,64 @@ const PRIORITY_META: Record<(typeof POC_PRIORITY_VALUES)[number], { label: strin
 const EFFORT_COLUMNS = [
   { key: "backend_days", label: "Backend" },
   { key: "frontend_days", label: "Frontend" },
+  { key: "design_days", label: "Design" },
+  { key: "devops_days", label: "DevOps" },
   { key: "pm_days", label: "PM" },
   { key: "qa_days", label: "QA" },
 ] as const;
 
 function milestoneTotal(m: PocMilestoneDraft) {
-  return m.backend_days + m.frontend_days + m.pm_days + m.qa_days;
+  return m.backend_days + m.frontend_days + m.design_days + m.devops_days + m.pm_days + m.qa_days;
 }
 
 const emptyMilestoneDraft: Record<string, string> = {
   name: "",
   backend_days: "0",
   frontend_days: "0",
+  design_days: "0",
+  devops_days: "0",
   pm_days: "0",
   qa_days: "0",
 };
 
+function downloadMilestonesCsv(milestones: PocMilestoneDraft[]) {
+  const rows = milestones.map((m) => ({
+    "Milestone / Feature": m.name,
+    Backend: m.backend_days,
+    Frontend: m.frontend_days,
+    Design: m.design_days,
+    DevOps: m.devops_days,
+    PM: m.pm_days,
+    QA: m.qa_days,
+    Total: milestoneTotal(m),
+  }));
+  const worksheet = XLSX.utils.json_to_sheet(rows);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Milestones");
+  XLSX.writeFile(workbook, "poc-milestone-effort.csv");
+}
+
 export function LogPocPage() {
   const navigate = useNavigate();
-  const { data: businessFunctions } = useBusinessFunctions();
+  const { profile } = useAuthRole();
   const { data: employees } = useEmployees();
   const createPoc = useCreatePoc();
   const createMilestones = useCreatePocMilestones();
+  const uploadAttachment = useUploadPocAttachment();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [milestones, setMilestones] = useState<PocMilestoneDraft[]>([]);
   const [addingMilestone, setAddingMilestone] = useState(false);
   const [milestoneDraft, setMilestoneDraft] = useState<Record<string, string>>(emptyMilestoneDraft);
   const [milestoneError, setMilestoneError] = useState<string | null>(null);
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
 
   const form = useForm<CreatePocInput>({
     resolver: zodResolver(createPocSchema),
     defaultValues: {
       client_name: "",
       opportunity_name: "",
-      business_function_id: undefined,
+      requirement: "",
       presales_lead_id: undefined,
       start_date: "",
       end_date: "",
@@ -79,7 +104,7 @@ export function LogPocPage() {
   });
 
   const totalEffort = milestones.reduce((sum, m) => sum + milestoneTotal(m), 0);
-  const isSubmitting = createPoc.isPending || createMilestones.isPending;
+  const isSubmitting = createPoc.isPending || createMilestones.isPending || uploadAttachment.isPending;
 
   function confirmMilestone() {
     const parsed = pocMilestoneDraftSchema.safeParse(milestoneDraft);
@@ -102,6 +127,16 @@ export function LogPocPage() {
       const poc = await createPoc.mutateAsync(values);
       if (milestones.length > 0) {
         await createMilestones.mutateAsync({ pocId: poc.id, milestones });
+      }
+      if (attachedFile && profile) {
+        try {
+          await uploadAttachment.mutateAsync({ pocId: poc.id, organizationId: profile.organization_id, file: attachedFile });
+        } catch (err) {
+          // The POC (and any milestones) are already saved at this point —
+          // a failed attachment upload shouldn't block navigation, just
+          // surface separately so it's obvious the file didn't make it.
+          toast.error(err instanceof Error ? `Attachment upload failed: ${err.message}` : "Attachment upload failed");
+        }
       }
       toast.success(`POC for "${poc.client_name}" logged.`);
       navigate(`/pocs/${poc.id}`);
@@ -160,28 +195,13 @@ export function LogPocPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <FormField
                   control={form.control}
-                  name="business_function_id"
+                  name="requirement"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Business function</FormLabel>
-                      <Select
-                        value={field.value ?? NO_BUSINESS_FUNCTION}
-                        onValueChange={(value) => field.onChange(value === NO_BUSINESS_FUNCTION ? undefined : value)}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a business function" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value={NO_BUSINESS_FUNCTION}>No business function</SelectItem>
-                          {businessFunctions?.map((bf) => (
-                            <SelectItem key={bf.id} value={bf.id}>
-                              {bf.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormLabel>Requirement</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="What the client needs this POC to prove out" {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -275,13 +295,55 @@ export function LogPocPage() {
                   </FormItem>
                 )}
               />
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Required Business Document</label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  onChange={(e) => setAttachedFile(e.target.files?.[0] ?? null)}
+                />
+                <div className="flex items-center gap-2">
+                  <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                    <Paperclip className="h-4 w-4" /> Attach document
+                  </Button>
+                  {attachedFile && (
+                    <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                      {attachedFile.name}
+                      <button
+                        type="button"
+                        aria-label="Remove attachment"
+                        onClick={() => {
+                          setAttachedFile(null);
+                          if (fileInputRef.current) fileInputRef.current.value = "";
+                        }}
+                        className="text-muted-foreground hover:text-destructive"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </span>
+                  )}
+                </div>
+              </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-start justify-between space-y-0">
-              <CardTitle className="text-base">Effort by Milestone / Feature</CardTitle>
-              <p className="text-xs text-muted-foreground">Person-days per role</p>
+              <div>
+                <CardTitle className="text-base">Effort by Milestone / Feature</CardTitle>
+                <p className="text-xs text-muted-foreground">Person-days per role</p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={milestones.length === 0}
+                onClick={() => downloadMilestonesCsv(milestones)}
+              >
+                <Download className="h-4 w-4" /> Download CSV
+              </Button>
             </CardHeader>
             <CardContent className="space-y-3">
               {milestones.length > 0 && (
@@ -343,7 +405,7 @@ export function LogPocPage() {
                     value={milestoneDraft.name}
                     onChange={(e) => setMilestoneDraft((d) => ({ ...d, name: e.target.value }))}
                   />
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
                     {EFFORT_COLUMNS.map((col) => (
                       <div key={col.key} className="space-y-1">
                         <label className="text-xs text-muted-foreground">{col.label}</label>

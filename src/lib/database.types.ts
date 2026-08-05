@@ -391,6 +391,9 @@ export interface Database {
           priority: PocPriority;
           presales_lead_id: string | null;
           justification: string | null;
+          requirement: string | null;
+          attachment_path: string | null;
+          attachment_name: string | null;
           created_by: string;
           created_at: string;
           updated_at: string;
@@ -409,6 +412,9 @@ export interface Database {
           priority?: PocPriority;
           presales_lead_id?: string | null;
           justification?: string | null;
+          requirement?: string | null;
+          attachment_path?: string | null;
+          attachment_name?: string | null;
           created_by: string;
           created_at?: string;
           updated_at?: string;
@@ -431,6 +437,8 @@ export interface Database {
           frontend_days: number;
           pm_days: number;
           qa_days: number;
+          design_days: number;
+          devops_days: number;
           created_at: string;
         };
         Insert: {
@@ -441,6 +449,8 @@ export interface Database {
           frontend_days?: number;
           pm_days?: number;
           qa_days?: number;
+          design_days?: number;
+          devops_days?: number;
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["poc_milestones"]["Insert"]>;

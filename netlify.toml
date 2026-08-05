@@ -1,0 +1,12 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# SPA fallback: every path Netlify can't find a real file for gets served
+# index.html instead, so React Router can take over client-side. Without
+# this, a hard refresh (or direct link) to any route other than "/" 404s,
+# since Netlify looks for a real file/folder at that path first.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
