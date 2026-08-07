@@ -26,8 +26,6 @@ import { useUploadPocAttachment } from "@/features/pocs/hooks/useUploadPocAttach
 import { useAuthRole } from "@/features/auth/hooks/useAuthSession";
 import { useEmployees } from "@/features/employees/hooks/useEmployees";
 
-const NO_PRESALES_LEAD = "none";
-
 const PRIORITY_META: Record<(typeof POC_PRIORITY_VALUES)[number], { label: string; dot: string; active: string }> = {
   normal: { label: "Normal", dot: "bg-muted-foreground/50", active: "border-foreground/30 bg-muted" },
   high: { label: "High", dot: "bg-amber-500", active: "border-amber-300 bg-amber-50 text-amber-800" },
@@ -212,17 +210,13 @@ export function LogPocPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Presales / Sales lead</FormLabel>
-                      <Select
-                        value={field.value ?? NO_PRESALES_LEAD}
-                        onValueChange={(value) => field.onChange(value === NO_PRESALES_LEAD ? undefined : value)}
-                      >
+                      <Select value={field.value || undefined} onValueChange={field.onChange}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select a presales / sales lead" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value={NO_PRESALES_LEAD}>Unassigned</SelectItem>
                           {employees?.map((e) => (
                             <SelectItem key={e.id} value={e.id}>
                               {e.full_name}

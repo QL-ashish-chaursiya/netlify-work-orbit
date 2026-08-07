@@ -15,7 +15,7 @@ export function useExpertiseSearch(filters: ExpertiseSearchFilters) {
     queryFn: async (): Promise<ExpertiseSearchResult[]> => {
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
-        .select("id, full_name, designation, primary_role, status")
+        .select("id, full_name, email, designation, primary_role, status")
         .eq("status", "active")
         .order("full_name");
       if (profilesError) throw profilesError;
@@ -98,6 +98,7 @@ export function useExpertiseSearch(filters: ExpertiseSearchFilters) {
           return {
             id: p.id,
             full_name: p.full_name,
+            email: p.email,
             designation: p.designation,
             primary_role: p.primary_role,
             skills: profileSkillList,

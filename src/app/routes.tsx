@@ -15,6 +15,7 @@ import { NotFoundPage } from "@/app/pages/NotFoundPage";
 import { EmployeesPage } from "@/features/employees/pages/EmployeesPage";
 import { BulkImportPage } from "@/features/employees/pages/BulkImportPage";
 import { CompleteProfilePage } from "@/features/employees/pages/CompleteProfilePage";
+import { MyProfilePage } from "@/features/employees/pages/MyProfilePage";
 
 import { ProjectsPage } from "@/features/projects/pages/ProjectsPage";
 import { ProjectDetailPage } from "@/features/projects/pages/ProjectDetailPage";
@@ -53,6 +54,7 @@ export const router = createBrowserRouter([
         children: [
           { path: "/complete-profile", element: <Shell><CompleteProfilePage /></Shell> },
           { path: "/dashboard", element: <Shell><DashboardPage /></Shell> },
+          { path: "/profile", element: <Shell><MyProfilePage /></Shell> },
 
           {
             path: "/employees",
@@ -70,7 +72,7 @@ export const router = createBrowserRouter([
 
           {
             path: "/approvals",
-            element: <RoleRoute allow={["admin", "resource_manager"]} />,
+            element: <RoleRoute allow={["admin", "tech_lead"]} />,
             children: [{ index: true, element: <Shell><ApprovalsPage /></Shell> }],
           },
 

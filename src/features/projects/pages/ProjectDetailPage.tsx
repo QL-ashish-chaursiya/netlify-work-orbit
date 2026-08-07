@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Plus } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -9,6 +9,7 @@ import { PROJECT_STATUS_TONE } from "@/lib/status-badges";
 import { useProject } from "@/features/projects/hooks/useProject";
 import { ProjectStatusStepper } from "@/features/projects/components/ProjectStatusStepper";
 import { ProjectOwnersList } from "@/features/projects/components/ProjectOwnersList";
+import { ProjectForm } from "@/features/projects/components/ProjectForm";
 import { RoleRequirementsList } from "@/features/projects/components/RoleRequirementsList";
 import { RoleRequirementForm } from "@/features/projects/components/RoleRequirementForm";
 import { AllocationsForProject } from "@/features/allocations/components/AllocationsForProject";
@@ -19,6 +20,7 @@ export function ProjectDetailPage() {
   const { data: project, isLoading } = useProject(id);
   const { data: orgProfiles } = useOrgProfiles("");
   const [roleFormOpen, setRoleFormOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
 
   const profileNameById = useMemo(() => {
     const map = new Map<string, string>();
@@ -64,10 +66,16 @@ export function ProjectDetailPage() {
             Project manager: {project.project_manager_id ? profileNameById.get(project.project_manager_id) ?? "Unknown" : "Not set"}
           </p>
           <p className="text-sm text-muted-foreground">
-            Resource manager: {project.resource_manager_id ? profileNameById.get(project.resource_manager_id) ?? "Unknown" : "Not set"}
+            Tech Lead: {project.resource_manager_id ? profileNameById.get(project.resource_manager_id) ?? "Unknown" : "Not set"}
           </p>
         </div>
+        <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
+          <Pencil className="mr-2 h-4 w-4" />
+          Edit details
+        </Button>
       </div>
+
+      <ProjectForm open={editOpen} onOpenChange={setEditOpen} project={project} />
 
       <ProjectStatusStepper project={project} />
 

@@ -13,9 +13,15 @@ export function useProfileOptions() {
   return useQuery({
     queryKey: ["allocations", "profile-options", orgId],
     queryFn: async () => {
+      // Admin is an administrative role, not a staffable resource — excluded
+      // here at the source so every dropdown built off this hook (resource
+      // picker in AllocationRequestForm, ReassignResourcePicker, etc.) never
+      // offers Admin as something to allocate, system-wide, without each
+      // caller having to remember to filter it out itself.
       const { data, error } = await supabase
         .from("profiles")
         .select("id, full_name, designation, primary_role, reporting_manager_id, status")
+        .neq("primary_role", "admin")
         .order("full_name");
       if (error) throw error;
       return data;

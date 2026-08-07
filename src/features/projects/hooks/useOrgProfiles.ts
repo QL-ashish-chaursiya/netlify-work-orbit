@@ -15,8 +15,9 @@ export function useOrgProfiles(search: string) {
     queryKey: ["org-profiles", orgId, search] as const,
     queryFn: async (): Promise<OrgProfileOption[]> => {
       let query = supabase.from("profiles").select("id, full_name, email, designation, primary_role, status").order("full_name");
-      if (search.trim()) {
-        query = query.ilike("full_name", `%${search.trim()}%`);
+      const term = search.trim();
+      if (term) {
+        query = query.or(`full_name.ilike.%${term}%,email.ilike.%${term}%`);
       }
       const { data, error } = await query;
       if (error) throw error;

@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useCurrentProfile } from "@/features/auth/hooks/useAuthSession";
 import { useSkills, useCompleteProfile } from "@/features/employees/hooks/useSkills";
 import { profileCompletionSchema, type ProfileCompletionInput } from "@/features/employees/types";
+import { humanizeEnum } from "@/lib/status-badges";
 
 interface ProfileCompletionFormProps {
   onCompleted?: () => void;
@@ -21,10 +22,14 @@ export function ProfileCompletionForm({ onCompleted }: ProfileCompletionFormProp
   const { data: skills } = useSkills();
   const completeProfile = useCompleteProfile();
 
+  // Designation reflects the role Admin already assigned this person — the
+  // employee only ever sees it here, they can't change it themselves.
+  const designation = profile?.designation ?? (profile?.primary_role ? humanizeEnum(profile.primary_role) : "");
+
   const form = useForm<ProfileCompletionInput>({
     resolver: zodResolver(profileCompletionSchema),
     defaultValues: {
-      designation: profile?.designation ?? "",
+      designation,
       skills: [],
     },
   });
@@ -67,12 +72,10 @@ export function ProfileCompletionForm({ onCompleted }: ProfileCompletionFormProp
                   <FormLabel>Designation</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Senior Engineer"
+                      disabled
                       name={field.name}
                       ref={field.ref}
-                      value={field.value ?? ""}
-                      onChange={field.onChange}
-                      onBlur={field.onBlur}
+                      value={field.value || "Not set — contact your Admin"}
                     />
                   </FormControl>
                   <FormMessage />

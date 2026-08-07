@@ -66,7 +66,7 @@ function downloadCsv(filename: string, rows: string[][]) {
 // listed in this SAME file would always fail validation ("not found") —
 // import managers first, then re-import a file with reports referencing them.
 const SAMPLE_ROWS = [
-  { full_name: "Rita Sharma", email: "rita.rm@example.com", primary_role: "resource_manager", designation: "Resource Manager", reporting_manager_email: "" },
+  { full_name: "Rita Sharma", email: "rita.sales@example.com", primary_role: "sales_lead", designation: "Sales Lead", reporting_manager_email: "" },
   { full_name: "Priya Patel", email: "priya.pm@example.com", primary_role: "project_manager", designation: "Project Manager", reporting_manager_email: "" },
   { full_name: "Tom Wilson", email: "tom.tl@example.com", primary_role: "tech_lead", designation: "Tech Lead", reporting_manager_email: "" },
   { full_name: "Alice Chen", email: "alice.dev@example.com", primary_role: "team_member", designation: "Software Engineer", reporting_manager_email: "" },

@@ -24,9 +24,11 @@ interface TrendAllocationRow {
 
 // Methodology (no historical snapshot table exists, so this is reconstructed
 // from current rows — prioritizing an explainable trend over precision):
-// - Denominator each month is the org's *current* active headcount. We don't
-//   track historical headcount, so this is a simplification: it answers "what
-//   would average utilization have looked like against today's headcount."
+// - Denominator each month is the org's *current* active, non-Admin
+//   headcount (same population as fetchUtilizationRows — every allocatable
+//   role counts, only Admin is excluded). We don't track historical
+//   headcount, so this is a simplification: it answers "what would average
+//   utilization have looked like against today's headcount."
 // - An allocation is counted in a given month if [start_date, effective_end]
 //   overlaps that month, where effective_end = actual_release_date ??
 //   planned_release_date ?? expected_completion_date ?? (still open-ended).
@@ -36,7 +38,7 @@ interface TrendAllocationRow {
 async function fetchMonthlyTrend(): Promise<MonthlyUtilizationPoint[]> {
   const [{ data: profiles, error: profilesError }, { data: allocations, error: allocationsError }] =
     await Promise.all([
-      supabase.from("profiles").select("id").eq("status", "active"),
+      supabase.from("profiles").select("id").eq("status", "active").neq("primary_role", "admin"),
       supabase
         .from("allocations")
         .select("profile_id, allocation_percent, start_date, expected_completion_date, planned_release_date, actual_release_date")

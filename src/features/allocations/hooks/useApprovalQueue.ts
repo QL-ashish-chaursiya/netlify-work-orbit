@@ -3,8 +3,9 @@ import { supabase } from "@/lib/supabase";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthRole } from "@/features/auth/hooks/useAuthSession";
 
-// Pending requests this user can act on: routed_to = me, OR I'm Admin/RM (who
-// can pick up any pending request per the BRD). Admin/RM branch fetches
+// Pending requests this user can act on: routed_to = me, OR I'm Admin/Tech
+// Lead (who can pick up any pending request per the BRD — this org has no
+// Resource Manager role, Tech Lead fills that slot). That branch fetches
 // broadly since RLS already narrows to the org; the non-approver branch
 // narrows server-side by routed_to to avoid an awkward .or() filter.
 //
@@ -18,7 +19,7 @@ import { useAuthRole } from "@/features/auth/hooks/useAuthSession";
 export function useApprovalQueue() {
   const { profile, hasRole } = useAuthRole();
   const routedTo = profile?.id;
-  const isApproverRole = hasRole("admin") || hasRole("resource_manager");
+  const isApproverRole = hasRole("admin") || hasRole("tech_lead");
 
   return useQuery({
     queryKey: queryKeys.approvalQueue(routedTo),

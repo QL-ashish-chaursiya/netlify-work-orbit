@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useUIStore } from "@/store/useUIStore";
 import { useAuthRole } from "@/features/auth/hooks/useAuthSession";
@@ -20,6 +20,7 @@ function initials(name: string) {
 export function Sidebar() {
   const sidebarOpen = useUIStore((s) => s.sidebarOpen);
   const { profile, primaryRole } = useAuthRole();
+  const navigate = useNavigate();
 
   // Same three counts that already back other screens (Approval Queue,
   // Release Calendar, Bench Report) — reused here as nav badges, not
@@ -48,9 +49,9 @@ export function Sidebar() {
       )}
     >
       <div className="flex h-14 items-center border-b border-white/10 px-4">
-        <span className={cn("font-semibold text-white", !sidebarOpen && "sr-only")}>
+        <Link to="/" className={cn("font-semibold text-white", !sidebarOpen && "sr-only")}>
           Work<span className="text-brand-blue-bright">Orbit</span>
-        </span>
+        </Link>
       </div>
 
       <nav className="flex-1 space-y-5 overflow-y-auto p-3">
@@ -90,7 +91,11 @@ export function Sidebar() {
       </nav>
 
       {profile && (
-        <div className="flex items-center gap-2.5 border-t border-white/10 p-3">
+        <button
+          type="button"
+          onClick={() => navigate("/profile")}
+          className="flex items-center gap-2.5 border-t border-white/10 p-3 text-left hover:bg-white/5"
+        >
           <Avatar className="h-8 w-8 shrink-0">
             <AvatarFallback className="bg-brand-blue text-xs text-white">{initials(profile.full_name)}</AvatarFallback>
           </Avatar>
@@ -100,7 +105,7 @@ export function Sidebar() {
               <p className="truncate text-xs text-white/50">{primaryRole ? humanizeEnum(primaryRole) : ""}</p>
             </div>
           )}
-        </div>
+        </button>
       )}
     </aside>
   );

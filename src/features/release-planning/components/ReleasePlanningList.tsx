@@ -83,7 +83,7 @@ function RowActions({ allocation }: { allocation: AllocationWithNames }) {
   async function onNotify(target: "resource_manager" | "project_manager") {
     try {
       await notifyStakeholder.mutateAsync({ allocationId: allocation.id, target });
-      toast.success(`Notified the ${target === "resource_manager" ? "Resource Manager" : "Project Manager"}.`);
+      toast.success(`Notified the ${target === "resource_manager" ? "Tech Lead" : "Project Manager"}.`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not send notification");
     }
@@ -103,7 +103,7 @@ function RowActions({ allocation }: { allocation: AllocationWithNames }) {
         disabled={notifyStakeholder.isPending}
         onClick={() => onNotify("resource_manager")}
       >
-        Notify Resource Manager
+        Notify Tech Lead
       </Button>
       <Button
         size="sm"

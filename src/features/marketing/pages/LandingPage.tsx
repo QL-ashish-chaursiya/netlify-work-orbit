@@ -51,7 +51,7 @@ const FEATURES = [
   },
   {
     title: "Role-Based Access, By Design",
-    description: "Six built-in roles: Admin, Resource Manager, Project Manager, Tech Lead, Sales Lead, and Team Member. Each one sees exactly what their job requires, with every organization's data isolated at the database layer.",
+    description: "Five built-in roles: Admin, Project Manager, Tech Lead, Sales Lead, and Team Member. Each one sees exactly what their job requires, with every organization's data isolated at the database layer.",
     icon: (
       <svg width="18" height="18" viewBox="0 0 18 18">
         <path d="M9 2l6 2.5v4c0 4-2.6 6.7-6 7.5-3.4-.8-6-3.5-6-7.5v-4L9 2z" fill="none" stroke="#5B93FF" strokeWidth="1.4" />
@@ -62,15 +62,14 @@ const FEATURES = [
 
 const ROLES = [
   { role: "Admin", body: "Full visibility across the organization: every project, every allocation, every approval." },
-  { role: "Resource Manager", body: "Owns the Approval Queue, arbitrates conflicts, and keeps utilization and Bench Reports honest." },
   { role: "Project Manager", body: "Builds role requirements, raises allocation requests, and moves projects through their lifecycle." },
-  { role: "Tech Lead", body: "Searches for the right skills and keeps track of who's assigned to their team's work." },
+  { role: "Tech Lead", body: "Owns the Approval Queue, arbitrates conflicts, and keeps utilization and Bench Reports honest — plus searches for the right skills and tracks who's assigned to their team's work." },
   { role: "Sales Lead", body: "Logs POCs, tracks outcomes, and converts a closed-won opportunity straight into a project." },
   { role: "Team Member", body: "Sees their own assignments, upcoming releases, and profile, and nothing more." },
 ];
 
 const STATS: { count: number; suffix: string; decimals: number; label: string }[] = [
-  { count: 6, suffix: "", decimals: 0, label: "Role-based dashboards, one per seat" },
+  { count: 5, suffix: "", decimals: 0, label: "Role-based dashboards, one per seat" },
   { count: 5, suffix: "", decimals: 0, label: "Project lifecycle stages, Draft through Closed" },
   { count: 3, suffix: "", decimals: 0, label: "Ways an allocation winds down: release, extend, or reassign" },
   { count: 1, suffix: "", decimals: 0, label: "Approval Queue for every request, org-wide" },
@@ -83,7 +82,7 @@ const POINTS = [
   },
   {
     title: "Approvals sit with the people accountable.",
-    body: "Resource Managers and Admins clear requests from a single Approval Queue. Self-approval is blocked by design: no one signs off on their own request.",
+    body: "Tech Leads and Admins clear requests from a single Approval Queue. Self-approval is blocked by design: no one signs off on their own request.",
   },
   {
     title: "Nobody goes looking for updates.",

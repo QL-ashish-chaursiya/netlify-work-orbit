@@ -13,10 +13,10 @@ interface ConflictBannerProps {
 
 // Shown for a request with status = 'conflict_flagged'. Joins request_conflicts
 // -> the "other side" request(s) client-side (see useAllocationRequests'
-// useRequestsByIds) and gives RM/Admin a Resolve action per conflict.
+// useRequestsByIds) and gives Tech Lead/Admin a Resolve action per conflict.
 export function ConflictBanner({ request }: ConflictBannerProps) {
   const { hasRole } = useAuthRole();
-  const canResolve = hasRole("admin") || hasRole("resource_manager");
+  const canResolve = hasRole("admin") || hasRole("tech_lead");
 
   const { data: conflicts, isLoading } = useConflictsForRequest(request.id);
   const otherIds = Array.from(

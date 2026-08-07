@@ -10,8 +10,8 @@ export const POC_OUTCOME_VALUES = ["pending", "closed_won", "closed_lost"] as co
 // database.types.ts's PocPriority union.
 export const POC_PRIORITY_VALUES = ["normal", "high", "urgent"] as const;
 
-// Log POC. Dates/requirement/presales lead are optional at creation time —
-// a Sales Lead may log a POC before those details are pinned down.
+// Log POC. Every field is required except the attachment (handled outside
+// this schema, in LogPocPage's own local state) and justification/notes.
 // No `outcome`/status field here by design: every new POC starts 'pending'
 // server-side (see useCreatePoc) — the create form never exposes it.
 // `business_function_id` is intentionally not collected here anymore — the
@@ -19,11 +19,11 @@ export const POC_PRIORITY_VALUES = ["normal", "high", "urgent"] as const;
 // the column itself still exists for whatever already has it set.
 export const createPocSchema = z.object({
   client_name: z.string().min(2, "Client name is required"),
-  opportunity_name: z.preprocess(emptyToUndefined, z.string().optional()),
-  requirement: z.preprocess(emptyToUndefined, z.string().optional()),
-  presales_lead_id: z.preprocess(emptyToUndefined, z.string().uuid().optional()),
-  start_date: z.preprocess(emptyToUndefined, z.string().optional()),
-  end_date: z.preprocess(emptyToUndefined, z.string().optional()),
+  opportunity_name: z.string().min(2, "POC / Project name is required"),
+  requirement: z.string().min(2, "Requirement is required"),
+  presales_lead_id: z.string().uuid({ message: "Select a Presales / Sales lead" }),
+  start_date: z.string().min(1, "Start date is required"),
+  end_date: z.string().min(1, "Target close date is required"),
   priority: z.enum(POC_PRIORITY_VALUES).default("normal"),
   justification: z.preprocess(emptyToUndefined, z.string().optional()),
 });

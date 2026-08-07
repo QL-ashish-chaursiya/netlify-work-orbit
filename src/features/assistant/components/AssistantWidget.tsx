@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { Bot, Send, Sparkles } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
@@ -42,8 +41,21 @@ export function AssistantWidget() {
     try {
       const answer = await askAssistant.mutateAsync({ message: text, history: historyForRequest });
       setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: "assistant", content: answer }]);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "The assistant couldn't answer that.");
+    } catch {
+      // db-assistant already turns anything it can recover from (including
+      // Groq tool-call failures) into a normal { answer } response — this
+      // catch is only for the rare case the request itself never reached it
+      // (network failure, function down). Either way, land it as a plain
+      // assistant reply, not a red error toast — this is a "couldn't answer
+      // that" moment for the user, not a system alarm.
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: "I don't have a way to answer that one right now — try rephrasing, or ask me something else.",
+        },
+      ]);
     }
   }
 

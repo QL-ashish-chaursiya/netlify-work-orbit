@@ -40,7 +40,7 @@ const ALL_ROLES: UserRole[] = [
 export const NAV_SECTIONS: NavSection[] = [
   {
     label: "Overview",
-    items: [{ label: "Executive Dashboard", href: "/dashboard", icon: LayoutGrid, roles: ALL_ROLES }],
+    items: [{ label: "Dashboard", href: "/dashboard", icon: LayoutGrid, roles: ALL_ROLES }],
   },
   {
     label: "Allocation",
@@ -50,26 +50,29 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Projects",
         href: "/projects",
         icon: FolderKanban,
-        roles: ["admin", "project_manager", "resource_manager", "tech_lead"],
+        roles: ["admin", "project_manager", "tech_lead"],
       },
       {
         label: "Utilization Timeline",
         href: "/reporting",
         icon: Calendar,
-        roles: ["admin", "resource_manager", "project_manager"],
+        roles: ["admin", "tech_lead", "project_manager"],
       },
       {
         label: "Release Planning",
         href: "/release-calendar",
         icon: MapPin,
-        roles: ["admin", "project_manager", "tech_lead", "resource_manager"],
+        roles: ["admin", "project_manager", "tech_lead"],
         badgeKey: "releases",
       },
       {
+        // Resource Manager doesn't exist as a role in this org — Tech Lead
+        // is who allocation requests route to for approval instead (see
+        // AllocationRequestForm's "Tech Lead" picker).
         label: "Allocation Requests",
         href: "/approvals",
         icon: CheckSquare,
-        roles: ["admin", "resource_manager"],
+        roles: ["admin", "tech_lead"],
         badgeKey: "approvals",
       },
     ],
@@ -81,13 +84,13 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Expertise Search",
         href: "/expertise-search",
         icon: Search,
-        roles: ["admin", "project_manager", "tech_lead", "resource_manager"],
+        roles: ["admin", "project_manager", "tech_lead"],
       },
       {
         label: "Bench Report",
         href: "/bench-report",
         icon: Clock,
-        roles: ["admin", "resource_manager", "project_manager"],
+        roles: ["admin", "tech_lead", "project_manager"],
         badgeKey: "bench",
       },
     ],

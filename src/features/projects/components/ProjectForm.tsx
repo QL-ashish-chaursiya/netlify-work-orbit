@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -18,7 +18,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createProjectSchema, type CreateProjectInput } from "@/features/projects/types";
 import { useCreateProject } from "@/features/projects/hooks/useCreateProject";
+import { useUpdateProject } from "@/features/projects/hooks/useUpdateProject";
 import { useOrgProfiles, type OrgProfileOption } from "@/features/projects/hooks/useOrgProfiles";
+import type { Tables } from "@/lib/database.types";
 
 const NO_MANAGER = "none";
 
@@ -26,34 +28,54 @@ interface ProjectFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated?: (projectId: string) => void;
+  // When set, the form edits this project in place instead of creating a
+  // new one — same fields, same validation, different mutation/copy.
+  project?: Tables<"projects">;
 }
 
-// New Project dialog. Projects always start in `draft` status (server-side
-// default + set explicitly in useCreateProject) — no status field here.
-export function ProjectForm({ open, onOpenChange, onCreated }: ProjectFormProps) {
+function toDefaultValues(project?: Tables<"projects">): CreateProjectInput {
+  return {
+    name: project?.name ?? "",
+    code: project?.code ?? "",
+    client_name: project?.client_name ?? "",
+    description: project?.description ?? "",
+    project_manager_id: project?.project_manager_id ?? undefined,
+    resource_manager_id: project?.resource_manager_id ?? undefined,
+    planned_start_date: project?.planned_start_date ?? "",
+    planned_end_date: project?.planned_end_date ?? "",
+  };
+}
+
+// Doubles as both "New project" and "Edit project" — pass `project` to edit.
+// Projects always start in `draft` status on create (server-side default +
+// set explicitly in useCreateProject); status isn't editable here at all,
+// that's ProjectStatusStepper's job.
+export function ProjectForm({ open, onOpenChange, onCreated, project }: ProjectFormProps) {
   const { data: orgProfiles } = useOrgProfiles("");
   const createProject = useCreateProject();
+  const updateProject = useUpdateProject(project?.id ?? "");
+  const isEditing = !!project;
 
   const form = useForm<CreateProjectInput>({
     resolver: zodResolver(createProjectSchema),
-    defaultValues: {
-      name: "",
-      code: "",
-      client_name: "",
-      description: "",
-      project_manager_id: undefined,
-      resource_manager_id: undefined,
-      planned_start_date: "",
-      planned_end_date: "",
-    },
+    defaultValues: toDefaultValues(project),
   });
+
+  // Re-sync the form whenever the dialog opens for a (possibly different)
+  // project — RHF's defaultValues are only read on first mount otherwise.
+  useEffect(() => {
+    if (open) form.reset(toDefaultValues(project));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, project?.id]);
 
   const projectManagerOptions = useMemo(
     () => (orgProfiles ?? []).filter((profile) => profile.status === "active" && profile.primary_role === "project_manager"),
     [orgProfiles],
   );
-  const resourceManagerOptions = useMemo(
-    () => (orgProfiles ?? []).filter((profile) => profile.status === "active" && profile.primary_role === "resource_manager"),
+  // "Resource manager" field/column repurposed as the project's Tech Lead —
+  // see AllocationRequestForm for the same swap on the request-routing side.
+  const techLeadOptions = useMemo(
+    () => (orgProfiles ?? []).filter((profile) => profile.status === "active" && profile.primary_role === "tech_lead"),
     [orgProfiles],
   );
 
@@ -63,31 +85,43 @@ export function ProjectForm({ open, onOpenChange, onCreated }: ProjectFormProps)
 
   async function onSubmit(values: CreateProjectInput) {
     try {
-      const { project, ownerWarning } = await createProject.mutateAsync(values);
-      toast.success(`Project "${project.name}" created.`);
+      if (isEditing) {
+        await updateProject.mutateAsync(values);
+        toast.success("Project updated.");
+        onOpenChange(false);
+        return;
+      }
+      const { project: created, ownerWarning } = await createProject.mutateAsync(values);
+      toast.success(`Project "${created.name}" created.`);
       if (ownerWarning) {
         toast.warning("Could not automatically set you as project owner — add yourself from the project page.");
       }
       form.reset();
       onOpenChange(false);
-      onCreated?.(project.id);
+      onCreated?.(created.id);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not create project");
+      toast.error(err instanceof Error ? err.message : isEditing ? "Could not update project" : "Could not create project");
     }
   }
+
+  const isPending = isEditing ? updateProject.isPending : createProject.isPending;
 
   return (
     <Dialog
       open={open}
       onOpenChange={(next) => {
-        if (!next) form.reset();
+        if (!next) form.reset(toDefaultValues(project));
         onOpenChange(next);
       }}
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>New project</DialogTitle>
-          <DialogDescription>Projects start in Draft status. You can add role requirements and owners after creating it.</DialogDescription>
+          <DialogTitle>{isEditing ? "Edit project" : "New project"}</DialogTitle>
+          <DialogDescription>
+            {isEditing
+              ? "Update this project's details. Status is managed separately from the stepper on the project page."
+              : "Projects start in Draft status. You can add role requirements and owners after creating it."}
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -176,16 +210,16 @@ export function ProjectForm({ open, onOpenChange, onCreated }: ProjectFormProps)
                 name="resource_manager_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Resource manager</FormLabel>
+                    <FormLabel>Tech Lead</FormLabel>
                     <Select value={field.value ?? NO_MANAGER} onValueChange={(value) => field.onChange(value === NO_MANAGER ? undefined : value)}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a resource manager" />
+                          <SelectValue placeholder="Select a Tech Lead" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value={NO_MANAGER}>No resource manager</SelectItem>
-                        {resourceManagerOptions.map((profile) => (
+                        <SelectItem value={NO_MANAGER}>No Tech Lead</SelectItem>
+                        {techLeadOptions.map((profile) => (
                           <SelectItem key={profile.id} value={profile.id}>
                             {formatPersonLabel(profile)}
                           </SelectItem>
@@ -226,11 +260,11 @@ export function ProjectForm({ open, onOpenChange, onCreated }: ProjectFormProps)
               />
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={createProject.isPending}>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={createProject.isPending}>
-                {createProject.isPending ? "Creating…" : "Create project"}
+              <Button type="submit" disabled={isPending}>
+                {isPending ? "Saving…" : isEditing ? "Save changes" : "Create project"}
               </Button>
             </DialogFooter>
           </form>

@@ -13,10 +13,10 @@ interface DecideInput {
 }
 
 // Approve/reject a request. RLS (requests_update_approver, most recently
-// 0011_admin_self_approval_allowed.sql) blocks a requester from deciding
-// their own request UNLESS they're Admin — Admin can decide any request in
-// their org, including one they raised themselves; Resource Manager (or a
-// routed_to approver) still cannot. Depending on exactly which rows/columns
+// 0014_tech_lead_replaces_resource_manager.sql) blocks a requester from
+// deciding their own request UNLESS they're Admin — Admin can decide any
+// request in their org, including one they raised themselves; Tech Lead (or
+// a routed_to approver) still cannot. Depending on exactly which rows/columns
 // are touched, a blocked self-decide can surface two different ways: a
 // silent "zero rows" result from `.select().single()` (Postgres error
 // PGRST116), or an explicit RLS violation on the UPDATE itself (Postgres

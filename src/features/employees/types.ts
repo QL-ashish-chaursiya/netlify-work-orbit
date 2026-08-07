@@ -1,16 +1,13 @@
 import { z } from "zod";
 import type { Tables } from "@/lib/database.types";
 
-// Mirrors the user_role Postgres enum (schema.sql SECTION 1) — keep in sync
-// with database.types.ts's UserRole union.
-export const USER_ROLE_VALUES = [
-  "admin",
-  "resource_manager",
-  "project_manager",
-  "tech_lead",
-  "team_member",
-  "sales_lead",
-] as const;
+// The roles assignable from the UI (Add Employee, bulk import, Resource
+// Directory's edit-role action). `resource_manager` is deliberately excluded
+// — this org runs without that role, using Tech Lead for the approval
+// routing Resource Manager used to handle (see AllocationRequestForm). The
+// Postgres user_role enum (schema.sql SECTION 1) still has the value for any
+// pre-existing data; it's just not offered going forward.
+export const USER_ROLE_VALUES = ["admin", "project_manager", "tech_lead", "team_member", "sales_lead"] as const;
 export type UserRoleValue = (typeof USER_ROLE_VALUES)[number];
 
 const emptyToUndefined = (val: unknown) => (typeof val === "string" && val.trim() === "" ? undefined : val);

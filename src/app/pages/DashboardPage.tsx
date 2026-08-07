@@ -7,10 +7,10 @@ import { SalesLeadDashboard } from "@/features/dashboard/components/SalesLeadDas
 import { TechLeadDashboard } from "@/features/dashboard/components/TechLeadDashboard";
 import { TeamMemberDashboard } from "@/features/dashboard/components/TeamMemberDashboard";
 
-// Role-based dashboard landing (BRD Phase 1). Admin and Resource Manager
-// share the org-wide oversight view (identical concerns: utilization,
-// bench, approvals, releases); every other role gets a dashboard scoped to
-// what's actually theirs to act on.
+// Role-based dashboard landing (BRD Phase 1). Admin shares the org-wide
+// oversight view; every other role (including Tech Lead, which has its own
+// dashboard below) gets a dashboard scoped to what's actually theirs to act
+// on. This org has no Resource Manager role.
 export function DashboardPage() {
   const { profile, primaryRole, isLoading } = useAuthRole();
 
@@ -29,7 +29,7 @@ export function DashboardPage() {
             <Skeleton key={i} className="h-28 w-full" />
           ))}
         </div>
-      ) : primaryRole === "admin" || primaryRole === "resource_manager" ? (
+      ) : primaryRole === "admin" ? (
         <AdminDashboard />
       ) : primaryRole === "project_manager" ? (
         <ProjectManagerDashboard />

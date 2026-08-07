@@ -1,6 +1,5 @@
 import { StatCard } from "@/features/dashboard/components/StatCard";
 import { UtilizationTrendCard } from "@/features/dashboard/components/UtilizationTrendCard";
-import { AllocationByFunctionCard } from "@/features/dashboard/components/AllocationByFunctionCard";
 import { UpcomingReleasesCard } from "@/features/dashboard/components/UpcomingReleasesCard";
 import { RecentActivityCard } from "@/features/dashboard/components/RecentActivityCard";
 import { useUtilizationData } from "@/features/reporting/hooks/useUtilizationData";
@@ -9,10 +8,10 @@ import { useBenchReport } from "@/features/reporting/hooks/useBenchReport";
 import { useAllocationStats } from "@/features/dashboard/hooks/useAllocationStats";
 import { usePocMonthlyStats } from "@/features/pocs/hooks/usePocMonthlyStats";
 
-// Org-wide oversight dashboard — shared by Admin and Resource Manager, since
-// both roles' concerns here are identical (org-wide utilization, bench,
-// approvals pipeline, releases), unlike PM/Tech Lead/Team Member/Sales Lead
-// which each get a differently-scoped dashboard.
+// Org-wide oversight dashboard — Admin only. This org has no Resource
+// Manager role; Tech Lead gets its own, differently-scoped dashboard (see
+// TechLeadDashboard) even though it now shares Admin's approvals/conflict
+// powers elsewhere in the app.
 export function AdminDashboard() {
   const { data: utilizationRows } = useUtilizationData();
   const { data: trend } = useMonthlyUtilizationTrend();
@@ -45,10 +44,7 @@ export function AdminDashboard() {
         <StatCard label="POC Conversion" value={`${pocTotals.conversionRate}%`} percent={pocTotals.conversionRate} colorClass="stroke-purple-500" />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <UtilizationTrendCard />
-        <AllocationByFunctionCard />
-      </div>
+      <UtilizationTrendCard />
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">

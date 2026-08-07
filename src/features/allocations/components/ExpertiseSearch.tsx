@@ -69,7 +69,7 @@ export function ExpertiseSearch() {
     const list = results ?? [];
     if (!nameQuery.trim()) return list;
     const q = nameQuery.trim().toLowerCase();
-    return list.filter((r) => r.full_name.toLowerCase().includes(q));
+    return list.filter((r) => r.full_name.toLowerCase().includes(q) || r.email.toLowerCase().includes(q));
   }, [results, nameQuery]);
 
   const hasActiveFilters = !!(skillId || experienceBand || maxUtilization || nameQuery);
@@ -78,12 +78,12 @@ export function ExpertiseSearch() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end gap-4 rounded-lg border bg-card p-4">
         <div className="space-y-1">
-          <Label>Name</Label>
+          <Label>Name or email</Label>
           <div className="relative">
             <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              className="w-48 pl-8"
-              placeholder="Search by name…"
+              className="w-56 pl-8"
+              placeholder="Search by name or email…"
               value={nameQuery}
               onChange={(e) => setNameQuery(e.target.value)}
             />
@@ -177,6 +177,7 @@ export function ExpertiseSearch() {
                   <p className="mt-0.5 text-sm text-muted-foreground">
                     {result.designation ?? humanizeEnum(result.primary_role)}
                     {result.experienceYears != null ? ` · ${result.experienceYears} yrs` : ""}
+                    {` · ${result.email}`}
                   </p>
                   {result.skills.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1.5">

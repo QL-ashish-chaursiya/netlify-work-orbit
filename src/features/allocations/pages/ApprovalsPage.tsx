@@ -2,6 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ApprovalQueueTable } from "@/features/allocations/components/ApprovalQueueTable";
 import { ConflictBanner } from "@/features/allocations/components/ConflictBanner";
+import { ReassignResourcePicker } from "@/features/allocations/components/ReassignResourcePicker";
 import { ResolvedConflictsList } from "@/features/allocations/components/ResolvedConflictsList";
 import { AllocationRequestForm } from "@/features/allocations/components/AllocationRequestForm";
 import { useAllocationRequests } from "@/features/allocations/hooks/useAllocationRequests";
@@ -21,7 +22,7 @@ export function ApprovalsPage() {
         <div>
           <h1 className="text-2xl font-semibold">Approval Queue</h1>
           <p className="text-sm text-muted-foreground">
-            Requests routed to you, plus everything pending if you're an Admin or Resource Manager.
+            Requests routed to you, plus everything pending if you're an Admin or Tech Lead.
           </p>
         </div>
         <AllocationRequestForm />
@@ -54,6 +55,7 @@ export function ApprovalsPage() {
                   </span>
                 </div>
                 <ConflictBanner request={request} />
+                <ReassignResourcePicker request={request} />
               </div>
             ))
           )}

@@ -37,7 +37,7 @@ function RequestSummary({
 // request's status.
 export function ResolvedConflictsList() {
   const { hasRole } = useAuthRole();
-  const canReopen = hasRole("admin") || hasRole("resource_manager");
+  const canReopen = hasRole("admin") || hasRole("tech_lead");
 
   const { data: conflicts, isLoading } = useResolvedConflicts();
   const reopenConflict = useReopenConflict();

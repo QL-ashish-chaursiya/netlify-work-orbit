@@ -33,6 +33,8 @@ export function ProjectOwnersList({ projectId }: ProjectOwnersListProps) {
 
   const existingOwnerIds = new Set((owners ?? []).map((o) => o.profile_id));
   const options = (candidates ?? []).filter((c) => !existingOwnerIds.has(c.id));
+  const looksLikeEmail = search.includes("@");
+  const noMatchForEmail = looksLikeEmail && options.length === 0;
 
   async function handleAdd() {
     if (!selectedProfileId) return;
@@ -83,10 +85,13 @@ export function ProjectOwnersList({ projectId }: ProjectOwnersListProps) {
           </DialogHeader>
           <div className="space-y-3">
             <Input
-              placeholder="Search by name…"
+              placeholder="Search by name or email…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
+            {noMatchForEmail && (
+              <p className="text-sm text-destructive">No user found with that email address.</p>
+            )}
             <Select value={selectedProfileId} onValueChange={setSelectedProfileId}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a person" />

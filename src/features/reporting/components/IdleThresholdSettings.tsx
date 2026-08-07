@@ -18,7 +18,7 @@ import { idleThresholdSchema, ORG_WIDE_THRESHOLD_VALUE, type IdleThresholdInput 
 
 export function IdleThresholdSettings() {
   const { hasRole } = useAuthRole();
-  const canManage = hasRole("admin") || hasRole("resource_manager");
+  const canManage = hasRole("admin") || hasRole("tech_lead");
 
   const { data: thresholds, isLoading } = useIdleThresholds();
   const { data: businessFunctions } = useBusinessFunctions();

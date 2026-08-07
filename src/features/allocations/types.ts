@@ -20,9 +20,13 @@ const optionalUuid = z.string().uuid().optional();
 
 export const allocationRequestSchema = z.object({
   project_id: z.string().uuid({ message: "Select a project" }),
-  // null / absent means "anyone matching skill X" per schema.sql comment on
-  // allocation_requests.requested_profile_id.
-  requested_profile_id: optionalUuid,
+  // A specific resource must always be named now — "open role" (anyone
+  // matching a skill) was removed from the create form.
+  requested_profile_id: z.string().uuid({ message: "Select a resource" }),
+  // Field name kept as resource_manager_id (maps straight to
+  // allocation_requests.routed_to via useCreateAllocationRequest) even though
+  // the picker now lists Tech Leads — renaming would mean touching the DB
+  // column and every read site for a label-only change.
   resource_manager_id: optionalUuid,
   request_type: z.enum(REQUEST_TYPE_OPTIONS),
   allocation_percent: z.coerce
@@ -30,7 +34,7 @@ export const allocationRequestSchema = z.object({
     .min(1, "Must be at least 1%")
     .max(100, "Cannot exceed 100%"),
   start_date: z.string().min(1, "Start date is required"),
-  end_date: z.string().optional(),
+  end_date: z.string().min(1, "End date is required"),
   justification: z.string().optional(),
 });
 
@@ -61,6 +65,7 @@ export interface ProfileSkillRow {
 export interface ExpertiseSearchResult {
   id: string;
   full_name: string;
+  email: string;
   designation: string | null;
   primary_role: string;
   skills: ProfileSkillRow[];
