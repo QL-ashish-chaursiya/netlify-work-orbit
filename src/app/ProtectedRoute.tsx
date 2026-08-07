@@ -28,7 +28,7 @@ export function ProtectedRoute() {
   if (profileMissing) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-4 text-center">
-        <h1 className="text-xl font-semibold">No profile found for this account</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">No profile found for this account</h1>
         <p className="max-w-md text-sm text-muted-foreground">
           Your login is valid, but there's no matching employee profile in this organization. This usually means
           the account was created directly in Supabase rather than through Signup, Add Employee, or Bulk Import.

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import type { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
@@ -92,7 +93,15 @@ export function EmployeeTable() {
   }
 
   const columns: ColumnDef<Employee>[] = [
-    { accessorKey: "full_name", header: "Name" },
+    {
+      accessorKey: "full_name",
+      header: "Name",
+      cell: ({ row }) => (
+        <Link to={`/employees/${row.original.id}`} className="font-medium hover:underline">
+          {row.original.full_name}
+        </Link>
+      ),
+    },
     { accessorKey: "email", header: "Email" },
     {
       id: "primary_role",

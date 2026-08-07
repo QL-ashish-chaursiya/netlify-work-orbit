@@ -1,10 +1,10 @@
-import { useRef, useState } from "react";
+import { useRef, useState, type ChangeEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
-import { ChevronRight, Download, Paperclip, Plus, X } from "lucide-react";
+import { ChevronRight, Download, Paperclip, Plus, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -55,6 +55,58 @@ const emptyMilestoneDraft: Record<string, string> = {
   qa_days: "0",
 };
 
+// Accepted header spellings per milestone field, matched case-insensitively
+// after stripping non-alphanumerics — same pattern as BulkImportWizard's
+// employee import, and matches downloadMilestonesCsv's own headers exactly
+// so an exported file re-imports cleanly.
+const MILESTONE_HEADER_ALIASES: Record<string, string[]> = {
+  name: ["milestonefeature", "milestone", "feature", "name"],
+  backend_days: ["backend"],
+  frontend_days: ["frontend"],
+  design_days: ["design"],
+  devops_days: ["devops"],
+  pm_days: ["pm"],
+  qa_days: ["qa"],
+};
+
+function normalizeHeader(key: string): string {
+  return key.trim().toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
+function mapMilestoneRow(raw: Record<string, unknown>): Record<string, unknown> {
+  const normalized: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(raw)) {
+    normalized[normalizeHeader(key)] = value;
+  }
+  const mapped: Record<string, unknown> = {};
+  for (const [field, aliases] of Object.entries(MILESTONE_HEADER_ALIASES)) {
+    const matchKey = aliases.find((alias) => alias in normalized);
+    if (matchKey !== undefined) mapped[field] = normalized[matchKey];
+  }
+  return mapped;
+}
+
+async function parseMilestonesCsv(file: File): Promise<{ valid: PocMilestoneDraft[]; skipped: number }> {
+  const buffer = await file.arrayBuffer();
+  const workbook = XLSX.read(buffer, { type: "array" });
+  const firstSheetName = workbook.SheetNames[0];
+  const sheet = firstSheetName ? workbook.Sheets[firstSheetName] : undefined;
+  if (!sheet) return { valid: [], skipped: 0 };
+  const rawRows: Record<string, unknown>[] = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+
+  const valid: PocMilestoneDraft[] = [];
+  let skipped = 0;
+  for (const raw of rawRows) {
+    const parsed = pocMilestoneDraftSchema.safeParse(mapMilestoneRow(raw));
+    if (parsed.success) {
+      valid.push(parsed.data);
+    } else {
+      skipped++;
+    }
+  }
+  return { valid, skipped };
+}
+
 function downloadMilestonesCsv(milestones: PocMilestoneDraft[]) {
   const rows = milestones.map((m) => ({
     "Milestone / Feature": m.name,
@@ -80,6 +132,7 @@ export function LogPocPage() {
   const createMilestones = useCreatePocMilestones();
   const uploadAttachment = useUploadPocAttachment();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const milestoneFileInputRef = useRef<HTMLInputElement>(null);
 
   const [milestones, setMilestones] = useState<PocMilestoneDraft[]>([]);
   const [addingMilestone, setAddingMilestone] = useState(false);
@@ -118,6 +171,25 @@ export function LogPocPage() {
 
   function removeMilestone(index: number) {
     setMilestones((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  async function handleMilestoneCsvUpload(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (milestoneFileInputRef.current) milestoneFileInputRef.current.value = "";
+    if (!file) return;
+    try {
+      const { valid, skipped } = await parseMilestonesCsv(file);
+      if (valid.length > 0) setMilestones((prev) => [...prev, ...valid]);
+      if (valid.length > 0 && skipped === 0) {
+        toast.success(`Added ${valid.length} milestone${valid.length === 1 ? "" : "s"} from CSV.`);
+      } else if (valid.length > 0 && skipped > 0) {
+        toast.warning(`Added ${valid.length} milestone${valid.length === 1 ? "" : "s"}, skipped ${skipped} invalid row${skipped === 1 ? "" : "s"}.`);
+      } else {
+        toast.error("No valid milestone rows found in that file.");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not read that file");
+    }
   }
 
   async function onSubmit(values: CreatePocInput) {
@@ -329,15 +401,27 @@ export function LogPocPage() {
                 <CardTitle className="text-base">Effort by Milestone / Feature</CardTitle>
                 <p className="text-xs text-muted-foreground">Person-days per role</p>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={milestones.length === 0}
-                onClick={() => downloadMilestonesCsv(milestones)}
-              >
-                <Download className="h-4 w-4" /> Download CSV
-              </Button>
+              <div className="flex items-center gap-2">
+                <input
+                  ref={milestoneFileInputRef}
+                  type="file"
+                  accept=".csv,.xlsx,.xls"
+                  className="hidden"
+                  onChange={handleMilestoneCsvUpload}
+                />
+                <Button type="button" variant="outline" size="sm" onClick={() => milestoneFileInputRef.current?.click()}>
+                  <Upload className="h-4 w-4" /> Upload CSV
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={milestones.length === 0}
+                  onClick={() => downloadMilestonesCsv(milestones)}
+                >
+                  <Download className="h-4 w-4" /> Download CSV
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-3">
               {milestones.length > 0 && (

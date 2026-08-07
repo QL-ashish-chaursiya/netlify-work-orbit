@@ -20,7 +20,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { allocationRequestSchema, type AllocationRequestInput } from "@/features/allocations/types";
 import { useCreateAllocationRequest } from "@/features/allocations/hooks/useCreateAllocationRequest";
-import { useProfileOptions, useProjectOptions } from "@/features/allocations/hooks/useLookups";
+import { useProfileOptions, useProjectOptions, useProjectOwnerIds } from "@/features/allocations/hooks/useLookups";
 import { useAllocationsByProject } from "@/features/allocations/hooks/useAllocationsByProject";
 
 // Sentinel for the shadcn/Radix Select — Radix reserves an empty string to
@@ -61,6 +61,8 @@ export function AllocationRequestForm({ trigger, defaultProjectId, defaultProfil
 
   const selectedProjectId = form.watch("project_id");
   const { data: projectAllocations } = useAllocationsByProject(selectedProjectId || undefined);
+  const { data: ownerIds } = useProjectOwnerIds(selectedProjectId || undefined);
+  const selectedProject = (projects ?? []).find((p) => p.id === selectedProjectId);
 
   // Tech Lead is who allocation requests route to for approval (see BRD/RLS —
   // routed_to lets them approve regardless of the requests_update_approver
@@ -71,8 +73,21 @@ export function AllocationRequestForm({ trigger, defaultProjectId, defaultProfil
     const occupiedIds = new Set(
       (projectAllocations ?? []).filter((a) => OCCUPIED_STATUSES.has(a.status)).map((a) => a.profile_id),
     );
-    return (profiles ?? []).filter((p) => !occupiedIds.has(p.id) || p.id === defaultProfileId);
-  }, [profiles, projectAllocations, defaultProfileId]);
+    // The project's own PM, and anyone already added as a Project Owner, are
+    // already committed to the project in that capacity — don't also offer
+    // them as a resource to allocate to it. Admin is excluded too, since
+    // it's an administrative role, not a staffable resource (see
+    // useProfileOptions for why that's not filtered at the source instead).
+    const projectManagerId = selectedProject?.project_manager_id;
+    const ownerIdSet = new Set(ownerIds ?? []);
+    return (profiles ?? []).filter(
+      (p) =>
+        (!occupiedIds.has(p.id) || p.id === defaultProfileId) &&
+        p.id !== projectManagerId &&
+        !ownerIdSet.has(p.id) &&
+        p.primary_role !== "admin",
+    );
+  }, [profiles, projectAllocations, defaultProfileId, selectedProject, ownerIds]);
 
   async function onSubmit(values: AllocationRequestInput) {
     try {

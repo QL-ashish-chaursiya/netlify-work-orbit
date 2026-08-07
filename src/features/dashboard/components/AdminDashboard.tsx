@@ -3,7 +3,6 @@ import { UtilizationTrendCard } from "@/features/dashboard/components/Utilizatio
 import { UpcomingReleasesCard } from "@/features/dashboard/components/UpcomingReleasesCard";
 import { RecentActivityCard } from "@/features/dashboard/components/RecentActivityCard";
 import { useUtilizationData } from "@/features/reporting/hooks/useUtilizationData";
-import { useMonthlyUtilizationTrend } from "@/features/reporting/hooks/useMonthlyUtilizationTrend";
 import { useBenchReport } from "@/features/reporting/hooks/useBenchReport";
 import { useAllocationStats } from "@/features/dashboard/hooks/useAllocationStats";
 import { usePocMonthlyStats } from "@/features/pocs/hooks/usePocMonthlyStats";
@@ -14,13 +13,17 @@ import { usePocMonthlyStats } from "@/features/pocs/hooks/usePocMonthlyStats";
 // powers elsewhere in the app.
 export function AdminDashboard() {
   const { data: utilizationRows } = useUtilizationData();
-  const { data: trend } = useMonthlyUtilizationTrend();
   const { data: benchRows } = useBenchReport();
   const { data: allocationStats } = useAllocationStats();
   const { totals: pocTotals } = usePocMonthlyStats();
 
   const headcount = utilizationRows?.length ?? 0;
-  const orgUtilizationPercent = trend && trend.length > 0 ? trend[trend.length - 1]?.averageUtilizationPercent ?? 0 : 0;
+  // Active resources / total resources — headcount actually carrying work
+  // right now, not an average allocation-load percent (that's a different
+  // metric, shown separately as "Org Avg. Utilization" on the Executive
+  // Dashboard / UtilizationTrendCard's trend line).
+  const activeResourceCount = (utilizationRows ?? []).filter((r) => r.utilizationPercent > 0).length;
+  const orgUtilizationPercent = headcount > 0 ? Math.round((activeResourceCount / headcount) * 100) : 0;
   const benchCount = benchRows?.length ?? 0;
   const benchPercent = headcount > 0 ? Math.round((benchCount / headcount) * 100) : 0;
 

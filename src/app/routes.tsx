@@ -16,6 +16,7 @@ import { EmployeesPage } from "@/features/employees/pages/EmployeesPage";
 import { BulkImportPage } from "@/features/employees/pages/BulkImportPage";
 import { CompleteProfilePage } from "@/features/employees/pages/CompleteProfilePage";
 import { MyProfilePage } from "@/features/employees/pages/MyProfilePage";
+import { EmployeeDetailPage } from "@/features/employees/pages/EmployeeDetailPage";
 
 import { ProjectsPage } from "@/features/projects/pages/ProjectsPage";
 import { ProjectDetailPage } from "@/features/projects/pages/ProjectDetailPage";
@@ -62,6 +63,7 @@ export const router = createBrowserRouter([
             children: [
               { index: true, element: <Shell><EmployeesPage /></Shell> },
               { path: "bulk-import", element: <Shell><BulkImportPage /></Shell> },
+              { path: ":id", element: <Shell><EmployeeDetailPage /></Shell> },
             ],
           },
 

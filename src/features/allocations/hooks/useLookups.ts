@@ -13,15 +13,18 @@ export function useProfileOptions() {
   return useQuery({
     queryKey: ["allocations", "profile-options", orgId],
     queryFn: async () => {
-      // Admin is an administrative role, not a staffable resource — excluded
-      // here at the source so every dropdown built off this hook (resource
-      // picker in AllocationRequestForm, ReassignResourcePicker, etc.) never
-      // offers Admin as something to allocate, system-wide, without each
-      // caller having to remember to filter it out itself.
+      // NOT filtered by role here — this hook doubles as a name-resolution
+      // lookup (Requester/Requested by/Target columns on ApprovalQueueTable,
+      // AllocationsForProject, ConflictBanner, etc.), and those need to
+      // resolve Admin's name too whenever Admin raised or is the routed_to
+      // on a request. Admin is excluded from "select a resource" dropdowns
+      // instead, locally in each component that builds one (see
+      // AllocationRequestForm/ReassignResourcePicker's availableProfiles) —
+      // excluding it here broke every admin-involved name lookup, showing
+      // "—" instead of "Admin" (see the fix that reverted this).
       const { data, error } = await supabase
         .from("profiles")
         .select("id, full_name, designation, primary_role, reporting_manager_id, status")
-        .neq("primary_role", "admin")
         .order("full_name");
       if (error) throw error;
       return data;
@@ -37,11 +40,31 @@ export function useProjectOptions() {
   return useQuery({
     queryKey: ["allocations", "project-options", orgId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("projects").select("id, name, code, status").order("name");
+      const { data, error } = await supabase
+        .from("projects")
+        .select("id, name, code, status, project_manager_id")
+        .order("name");
       if (error) throw error;
       return data;
     },
     enabled: !!orgId,
+  });
+}
+
+// Just the profile_ids currently listed as owners of a project — used to
+// exclude them from "select a resource" dropdowns (AllocationRequestForm,
+// ReassignResourcePicker), same reasoning as excluding the project's PM:
+// someone already committed to the project as an owner shouldn't also be
+// pickable as the resource being allocated to it.
+export function useProjectOwnerIds(projectId: string | undefined) {
+  return useQuery({
+    queryKey: ["allocations", "project-owner-ids", projectId],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("project_owners").select("profile_id").eq("project_id", projectId as string);
+      if (error) throw error;
+      return data.map((o) => o.profile_id);
+    },
+    enabled: !!projectId,
   });
 }
 

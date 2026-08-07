@@ -25,8 +25,14 @@ export function useConfirmRelease() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.allocations(orgId) });
+      // See the matching comment in useMarkForRelease — allocationsByProject/
+      // allocationsByProfile are separate key branches from queryKeys.allocations
+      // and need their own invalidation, or AllocationsForProject on the
+      // Project Details page shows the stale status until a hard refresh.
+      queryClient.invalidateQueries({ queryKey: queryKeys.allocationsByProject(data.project_id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.allocationsByProfile(data.profile_id) });
       queryClient.invalidateQueries({ queryKey: plannedForReleaseKey(orgId) });
       queryClient.invalidateQueries({ queryKey: calendarAllocationsKey(orgId) });
     },

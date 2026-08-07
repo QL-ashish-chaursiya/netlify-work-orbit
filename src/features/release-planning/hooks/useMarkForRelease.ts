@@ -28,8 +28,16 @@ export function useMarkForRelease() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.allocations(orgId) });
+      // queryKeys.allocations(orgId) is a *different* key branch from
+      // allocationsByProject/allocationsByProfile (["allocations", orgId] vs
+      // ["allocations", "by-project", id]), so invalidating one never
+      // touches the other — without these, AllocationsForProject on the
+      // Project Details page (and ResourceProfileDrawer/MyProfilePage) kept
+      // showing the pre-release status until a hard refresh re-fetched it.
+      queryClient.invalidateQueries({ queryKey: queryKeys.allocationsByProject(data.project_id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.allocationsByProfile(data.profile_id) });
       queryClient.invalidateQueries({ queryKey: plannedForReleaseKey(orgId) });
       queryClient.invalidateQueries({ queryKey: calendarAllocationsKey(orgId) });
     },

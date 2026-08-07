@@ -5,18 +5,10 @@ import { DataTable } from "@/components/shared/DataTable";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { PROJECT_STATUS_TONE } from "@/lib/status-badges";
 import { useProjects } from "@/features/projects/hooks/useProjects";
-import { useBusinessFunctions } from "@/features/org/hooks/useBusinessFunctions";
 import type { Tables } from "@/lib/database.types";
 
 export function ProjectList() {
   const { data: projects, isLoading } = useProjects();
-  const { data: businessFunctions } = useBusinessFunctions();
-
-  const businessFunctionNameById = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const bf of businessFunctions ?? []) map.set(bf.id, bf.name);
-    return map;
-  }, [businessFunctions]);
 
   const columns = useMemo<ColumnDef<Tables<"projects">>[]>(
     () => [
@@ -35,14 +27,6 @@ export function ProjectList() {
         cell: ({ row }) => row.original.client_name ?? "—",
       },
       {
-        id: "business_function",
-        header: "Business function",
-        cell: ({ row }) =>
-          row.original.business_function_id
-            ? businessFunctionNameById.get(row.original.business_function_id) ?? "—"
-            : "—",
-      },
-      {
         accessorKey: "status",
         header: "Status",
         cell: ({ row }) => <StatusBadge value={row.original.status} toneMap={PROJECT_STATUS_TONE} />,
@@ -58,7 +42,7 @@ export function ProjectList() {
         cell: ({ row }) => row.original.planned_end_date ?? "—",
       },
     ],
-    [businessFunctionNameById],
+    [],
   );
 
   return (

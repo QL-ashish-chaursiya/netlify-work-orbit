@@ -65,6 +65,13 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    /* No font-family was ever declared for the app content area (only the
+       marketing landing page sets one, scoped to .wo-landing) — every other
+       page was silently falling back to each browser/OS's own default serif
+       or sans-serif, which is why the font looked inconsistent depending on
+       where you looked. This is the single source of truth for the whole
+       app now; Tailwind's own `font-sans` utility resolves to the same
+       stack, so anything using it explicitly stays in sync automatically. */
+    @apply bg-background text-foreground font-sans;
   }
 }

@@ -27,8 +27,14 @@ function initials(name: string) {
 // manager, member since) since this is the user's own dedicated view.
 export function MyProfilePage() {
   const { profile } = useAuthRole();
-  const { data: skills, isLoading: skillsLoading } = useProfileSkills(profile?.id);
-  const { data: allocations, isLoading: allocationsLoading } = useAllocationsByProfile(profile?.id);
+  // Admin isn't a staffable resource (see useProfileOptions, which already
+  // excludes Admin from every "pick a resource" dropdown) — business
+  // function, reporting manager, utilization, skills, and allocations are
+  // all concepts that never apply to that role, so none of it is fetched or
+  // rendered for one; see the early return below.
+  const isAdmin = profile?.primary_role === "admin";
+  const { data: skills, isLoading: skillsLoading } = useProfileSkills(isAdmin ? undefined : profile?.id);
+  const { data: allocations, isLoading: allocationsLoading } = useAllocationsByProfile(isAdmin ? undefined : profile?.id);
   const { data: skillOptions } = useSkillOptions();
   const { data: businessFunctions } = useBusinessFunctions();
   const { data: orgProfiles } = useProfileOptions();
@@ -85,22 +91,40 @@ export function MyProfilePage() {
     );
   }
 
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-4">
-        <Avatar className="h-16 w-16 shrink-0">
-          <AvatarFallback className="bg-brand-blue text-lg text-white">{initials(profile.full_name)}</AvatarFallback>
-        </Avatar>
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">{profile.full_name}</h1>
-          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            <span>{profile.designation ?? humanizeEnum(profile.primary_role)}</span>
-            <span>·</span>
-            <span>{profile.email}</span>
-            <StatusBadge value={profile.status} toneMap={ACCOUNT_STATUS_TONE} />
-          </div>
+  const header = (
+    <div className="flex flex-wrap items-center gap-4">
+      <Avatar className="h-16 w-16 shrink-0">
+        <AvatarFallback className="bg-brand-blue text-lg text-white">{initials(profile.full_name)}</AvatarFallback>
+      </Avatar>
+      <div className="space-y-1">
+        <h1 className="text-2xl font-semibold tracking-tight">{profile.full_name}</h1>
+        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+          <span>{profile.designation ?? humanizeEnum(profile.primary_role)}</span>
+          <span>·</span>
+          <span>{profile.email}</span>
+          <StatusBadge value={profile.status} toneMap={ACCOUNT_STATUS_TONE} />
         </div>
       </div>
+    </div>
+  );
+
+  if (isAdmin) {
+    return (
+      <div className="space-y-6">
+        {header}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Role</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm font-medium">{humanizeEnum(profile.primary_role)}</CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {header}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>

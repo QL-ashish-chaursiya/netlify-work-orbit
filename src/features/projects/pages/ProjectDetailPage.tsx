@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Pencil, Plus } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -10,8 +10,6 @@ import { useProject } from "@/features/projects/hooks/useProject";
 import { ProjectStatusStepper } from "@/features/projects/components/ProjectStatusStepper";
 import { ProjectOwnersList } from "@/features/projects/components/ProjectOwnersList";
 import { ProjectForm } from "@/features/projects/components/ProjectForm";
-import { RoleRequirementsList } from "@/features/projects/components/RoleRequirementsList";
-import { RoleRequirementForm } from "@/features/projects/components/RoleRequirementForm";
 import { AllocationsForProject } from "@/features/allocations/components/AllocationsForProject";
 import { useOrgProfiles } from "@/features/projects/hooks/useOrgProfiles";
 
@@ -19,7 +17,6 @@ export function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { data: project, isLoading } = useProject(id);
   const { data: orgProfiles } = useOrgProfiles("");
-  const [roleFormOpen, setRoleFormOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
 
   const profileNameById = useMemo(() => {
@@ -80,18 +77,6 @@ export function ProjectDetailPage() {
       <ProjectStatusStepper project={project} />
 
       <ProjectOwnersList projectId={project.id} />
-
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Role Requirements</h2>
-          <Button size="sm" variant="outline" onClick={() => setRoleFormOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add role
-          </Button>
-        </div>
-        <RoleRequirementsList projectId={project.id} />
-        <RoleRequirementForm projectId={project.id} open={roleFormOpen} onOpenChange={setRoleFormOpen} />
-      </div>
 
       <AllocationsForProject projectId={project.id} />
     </div>

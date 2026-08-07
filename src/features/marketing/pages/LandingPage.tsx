@@ -399,10 +399,6 @@ export function LandingPage() {
             </div>
           </div>
         </div>
-        <div className="scroll-cue">
-          <span>Scroll</span>
-          <div className="wheel" />
-        </div>
       </section>
 
       <section id="platform" className="section-alt">
