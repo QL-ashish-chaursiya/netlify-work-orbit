@@ -2,6 +2,15 @@ import { z } from "zod";
 
 export const REQUEST_TYPE_OPTIONS = ["hard_allocation", "soft_reservation"] as const;
 
+// Display labels only — the underlying enum values (hard_allocation /
+// soft_reservation) stay as-is in the DB and in useDecideAllocationRequest's
+// active/soft_reserved branching. "Full allocation" / "Half allocation" is
+// just friendlier wording shown wherever request_type is rendered.
+export const REQUEST_TYPE_LABELS: Record<(typeof REQUEST_TYPE_OPTIONS)[number], string> = {
+  hard_allocation: "Full allocation",
+  soft_reservation: "Half allocation",
+};
+
 // A UUID field that's optional in the form: shadcn <Select> can't carry an
 // empty-string value (Radix reserves "" to mean "clear selection"), so the
 // form layer uses a sentinel ("unassigned"/"open") and strips it before this

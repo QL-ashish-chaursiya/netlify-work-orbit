@@ -27,7 +27,7 @@ export function useApprovalQueue() {
       if (!isApproverRole) {
         query = query.eq("routed_to", routedTo as string);
       }
-      const { data, error } = await query.order("created_at", { ascending: true });
+      const { data, error } = await query.order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },

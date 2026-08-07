@@ -13,7 +13,8 @@ import {
 } from "@/components/ui/dialog";
 import { DataTable } from "@/components/shared/DataTable";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { REQUEST_STATUS_TONE, humanizeEnum } from "@/lib/status-badges";
+import { REQUEST_STATUS_TONE } from "@/lib/status-badges";
+import { REQUEST_TYPE_LABELS } from "@/features/allocations/types";
 import type { Tables } from "@/lib/database.types";
 import { useApprovalQueue } from "@/features/allocations/hooks/useApprovalQueue";
 import { useDecideAllocationRequest, useRequestMoreInfo } from "@/features/allocations/hooks/useDecideAllocationRequest";
@@ -91,7 +92,7 @@ export function ApprovalQueueTable() {
     {
       accessorKey: "request_type",
       header: "Type",
-      cell: ({ row }) => humanizeEnum(row.original.request_type),
+      cell: ({ row }) => REQUEST_TYPE_LABELS[row.original.request_type],
     },
     {
       accessorKey: "allocation_percent",

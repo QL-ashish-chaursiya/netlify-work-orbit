@@ -13,7 +13,7 @@ export function usePocMilestones(pocId: string | undefined) {
         .from("poc_milestones")
         .select("*")
         .eq("poc_id", pocId as string)
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },

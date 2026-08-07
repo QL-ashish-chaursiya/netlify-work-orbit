@@ -19,13 +19,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { humanizeEnum } from "@/lib/status-badges";
 import { cn } from "@/lib/utils";
-import { useBusinessFunctions } from "@/features/org/hooks/useBusinessFunctions";
 import { useEmployees } from "@/features/employees/hooks/useEmployees";
 import { useAddEmployee } from "@/features/employees/hooks/useAddEmployee";
 import { useSeatLimit } from "@/features/employees/hooks/useSeatLimit";
 import { addEmployeeSchema, USER_ROLE_VALUES, type AddEmployeeInput } from "@/features/employees/types";
-
-const NONE = "__none__";
 
 export function AddEmployeeForm() {
   const [open, setOpen] = useState(false);
@@ -33,7 +30,6 @@ export function AddEmployeeForm() {
   const [managerFilter, setManagerFilter] = useState("");
 
   const { data: employees } = useEmployees();
-  const { data: businessFunctions } = useBusinessFunctions();
   const { data: seatLimit } = useSeatLimit();
   const addEmployee = useAddEmployee();
 
@@ -45,7 +41,6 @@ export function AddEmployeeForm() {
       primary_role: "team_member",
       designation: "",
       reporting_manager_id: "",
-      business_function_id: "",
     },
   });
 
@@ -68,7 +63,6 @@ export function AddEmployeeForm() {
         primary_role: "team_member",
         designation: "",
         reporting_manager_id: "",
-        business_function_id: "",
       });
       setOpen(false);
     } catch (err) {
@@ -163,35 +157,6 @@ export function AddEmployeeForm() {
                       onBlur={field.onBlur}
                     />
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="business_function_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Business function (optional)</FormLabel>
-                  <Select
-                    value={field.value || NONE}
-                    onValueChange={(value) => field.onChange(value === NONE ? "" : value)}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="No business function" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value={NONE}>No business function</SelectItem>
-                      {(businessFunctions ?? []).map((bf) => (
-                        <SelectItem key={bf.id} value={bf.id}>
-                          {bf.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { allocationRequestSchema, type AllocationRequestInput } from "@/features/allocations/types";
+import { allocationRequestSchema, REQUEST_TYPE_LABELS, type AllocationRequestInput } from "@/features/allocations/types";
 import { useCreateAllocationRequest } from "@/features/allocations/hooks/useCreateAllocationRequest";
 import { useProfileOptions, useProjectOptions } from "@/features/allocations/hooks/useLookups";
 
@@ -138,8 +138,8 @@ export function AllocationRequestForm({ trigger, defaultProjectId, defaultProfil
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="hard_allocation">Hard allocation</SelectItem>
-                      <SelectItem value="soft_reservation">Soft reservation</SelectItem>
+                      <SelectItem value="hard_allocation">{REQUEST_TYPE_LABELS.hard_allocation}</SelectItem>
+                      <SelectItem value="soft_reservation">{REQUEST_TYPE_LABELS.soft_reservation}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

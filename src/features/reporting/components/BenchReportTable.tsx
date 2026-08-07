@@ -5,14 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useBenchReportDetail } from "@/features/reporting/hooks/useBenchReportDetail";
-import { useBusinessFunctions } from "@/features/org/hooks/useBusinessFunctions";
 import { ResourceProfileDrawer } from "@/features/allocations/components/ResourceProfileDrawer";
 import type { BenchDetailRow } from "@/features/reporting/types";
 
-const ALL_FUNCTIONS_VALUE = "__all__";
 const GRID_COLS = "minmax(180px,2fr) minmax(150px,1.5fr) minmax(150px,1.5fr) 90px 90px 90px 90px";
 
 function initials(name: string) {
@@ -24,11 +21,9 @@ function utilizationBadgeClass(percent: number) {
 }
 
 export function BenchReportTable() {
-  const [businessFunctionId, setBusinessFunctionId] = useState<string | null>(null);
   const [nameQuery, setNameQuery] = useState("");
   const [drawerProfileId, setDrawerProfileId] = useState<string | null>(null);
-  const { data: businessFunctions } = useBusinessFunctions();
-  const { data: rows, isLoading } = useBenchReportDetail({ businessFunctionId });
+  const { data: rows, isLoading } = useBenchReportDetail();
 
   const visibleRows = useMemo(() => {
     const list = rows ?? [];
@@ -51,25 +46,6 @@ export function BenchReportTable() {
               onChange={(e) => setNameQuery(e.target.value)}
             />
           </div>
-        </div>
-        <div className="space-y-1">
-          <label className="text-sm font-medium">Business function</label>
-          <Select
-            value={businessFunctionId ?? ALL_FUNCTIONS_VALUE}
-            onValueChange={(value) => setBusinessFunctionId(value === ALL_FUNCTIONS_VALUE ? null : value)}
-          >
-            <SelectTrigger className="w-56">
-              <SelectValue placeholder="All business functions" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL_FUNCTIONS_VALUE}>All business functions</SelectItem>
-              {(businessFunctions ?? []).map((bf) => (
-                <SelectItem key={bf.id} value={bf.id}>
-                  {bf.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
       </div>
 

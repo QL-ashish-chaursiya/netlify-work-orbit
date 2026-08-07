@@ -25,7 +25,7 @@ export function usePocEngagementSummaries(pocIds: string[]) {
         .from("poc_resources")
         .select("poc_id, profile_id, created_at")
         .in("poc_id", sortedIds)
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: false });
       if (prError) throw prError;
       if (!pocResources || pocResources.length === 0) return new Map();
 

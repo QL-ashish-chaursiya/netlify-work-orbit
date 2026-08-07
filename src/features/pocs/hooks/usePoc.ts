@@ -25,7 +25,7 @@ export function usePoc(id: string | undefined) {
         .from("poc_resources")
         .select("*")
         .eq("poc_id", id as string)
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: false });
       if (resourcesError) throw resourcesError;
 
       if (!resources.length) return { ...poc, resources: [] };

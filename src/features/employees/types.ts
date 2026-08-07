@@ -25,7 +25,6 @@ export const addEmployeeSchema = z.object({
   }),
   designation: z.preprocess(emptyToUndefined, z.string().optional().nullable()),
   reporting_manager_id: z.preprocess(emptyToUndefined, z.string().uuid().optional().nullable()),
-  business_function_id: z.preprocess(emptyToUndefined, z.string().uuid().optional().nullable()),
 });
 export type AddEmployeeInput = z.infer<typeof addEmployeeSchema>;
 

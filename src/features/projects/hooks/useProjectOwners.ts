@@ -22,7 +22,7 @@ export function useProjectOwners(projectId: string | undefined) {
         .from("project_owners")
         .select("*")
         .eq("project_id", projectId as string)
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: false });
       if (error) throw error;
       if (!owners.length) return [];
 
