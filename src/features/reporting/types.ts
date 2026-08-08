@@ -41,15 +41,14 @@ export interface BenchSkill {
 
 // Enriches a BenchRow with the context a resource manager actually needs to
 // act on a bench entry — sourced from real profile/skill/allocation rows,
-// never fabricated. idleSinceDate/durationDays are null when the profile has
-// no allocation with a completion/release date in the past (e.g. never
-// allocated yet), rather than defaulting to a fake "0 days".
+// never fabricated. idleSinceDate is null when the profile has no allocation
+// with a completion/release date in the past (e.g. never allocated yet),
+// rather than defaulting to a fake date.
 export interface BenchDetailRow extends BenchRow {
   designation: string | null;
   skills: BenchSkill[];
   lastProjectName: string | null;
   idleSinceDate: string | null;
-  durationDays: number | null;
 }
 
 export interface MonthlyUtilizationPoint {

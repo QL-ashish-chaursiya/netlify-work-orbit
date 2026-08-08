@@ -10,7 +10,7 @@ import { useBenchReportDetail } from "@/features/reporting/hooks/useBenchReportD
 import { ResourceProfileDrawer } from "@/features/allocations/components/ResourceProfileDrawer";
 import type { BenchDetailRow } from "@/features/reporting/types";
 
-const GRID_COLS = "minmax(180px,2fr) minmax(150px,1.5fr) minmax(150px,1.5fr) 90px 90px 90px 90px";
+const GRID_COLS = "minmax(180px,2fr) minmax(150px,1.5fr) minmax(150px,1.5fr) 90px 90px 90px";
 
 function initials(name: string) {
   return name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
@@ -67,7 +67,6 @@ export function BenchReportTable() {
               <span>Skill profile</span>
               <span>Last project</span>
               <span>Idle since</span>
-              <span>Duration</span>
               <span>Utilization</span>
               <span className="text-right">Actions</span>
             </div>
@@ -102,10 +101,6 @@ export function BenchReportTable() {
 
                   <p className="text-sm text-muted-foreground">
                     {row.idleSinceDate ? format(parseISO(row.idleSinceDate), "MMM d") : "—"}
-                  </p>
-
-                  <p className="text-sm text-muted-foreground">
-                    {row.durationDays != null ? `${row.durationDays} days` : "—"}
                   </p>
 
                   <span className={`w-fit rounded-full px-2 py-0.5 text-xs font-semibold ${utilizationBadgeClass(row.utilizationPercent)}`}>

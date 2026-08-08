@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { differenceInCalendarDays, parseISO } from "date-fns";
 import { supabase } from "@/lib/supabase";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthRole } from "@/features/auth/hooks/useAuthSession";
@@ -30,7 +29,7 @@ async function fetchBenchDetail(bench: BenchRow[]): Promise<BenchDetailRow[]> {
       .in("profile_id", profileIds),
     supabase
       .from("allocations")
-      .select("profile_id, project_id, status, expected_completion_date, planned_release_date, created_at")
+      .select("profile_id, project_id, status, expected_completion_date, planned_release_date, actual_release_date, created_at")
       .in("profile_id", profileIds),
   ]);
   if (profilesError) throw profilesError;
@@ -62,14 +61,19 @@ async function fetchBenchDetail(bench: BenchRow[]): Promise<BenchDetailRow[]> {
     skillsByProfile.set(ps.profile_id, list);
   }
 
-  // Per profile: the most recent allocation whose completion/release date has
-  // already passed becomes "idle since" + "last project". If none exists
-  // (never allocated, or currently open-ended), fall back to the most
-  // recently created allocation for "last project" only.
+  // Per profile: the most recent allocation whose release/completion date has
+  // already passed becomes "idle since" + "last project". Prefer
+  // actual_release_date (the real date someone was released, e.g. via
+  // "Release now") over the merely-planned dates — actual_release_date was
+  // previously not queried at all, which meant anyone released early (before
+  // their planned/expected date, or with no planned date set) never got an
+  // "idle since" value even though we know exactly when they went idle. If
+  // none exists (never allocated, or currently open-ended), fall back to the
+  // most recently created allocation for "last project" only.
   const idleCandidateByProfile = new Map<string, { date: string; project_id: string }>();
   const latestAnyByProfile = new Map<string, { project_id: string; created_at: string }>();
   for (const a of allocations ?? []) {
-    const pastDate = a.expected_completion_date ?? a.planned_release_date;
+    const pastDate = a.actual_release_date ?? a.expected_completion_date ?? a.planned_release_date;
     if (pastDate && pastDate <= today) {
       const existing = idleCandidateByProfile.get(a.profile_id);
       if (!existing || pastDate > existing.date) {
@@ -101,7 +105,6 @@ async function fetchBenchDetail(bench: BenchRow[]): Promise<BenchDetailRow[]> {
           ? (projectNameById.get(fallback.project_id) ?? null)
           : null,
       idleSinceDate: idleCandidate?.date ?? null,
-      durationDays: idleCandidate ? differenceInCalendarDays(new Date(), parseISO(idleCandidate.date)) : null,
     };
   });
 }
