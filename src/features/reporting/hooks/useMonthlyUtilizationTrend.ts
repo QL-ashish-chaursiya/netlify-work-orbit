@@ -8,10 +8,15 @@ import type { MonthlyUtilizationPoint } from "@/features/reporting/types";
 
 const TREND_MONTHS = 12;
 
-// Statuses that represent bandwidth that was genuinely committed at some point
-// (as opposed to `soft_reserved`, not yet confirmed, or `cancelled`, which never
-// happened) — used to reconstruct a historical trend from current allocation rows.
-const TREND_STATUSES: AllocationStatus[] = ["active", "planned_for_release", "released"];
+// Statuses that represent bandwidth that was genuinely committed at some
+// point (as opposed to `cancelled`, which never happened) — used to
+// reconstruct a historical trend from current allocation rows. `soft_reserved`
+// (half allocation) is a real, already-approved commitment, same as `active`,
+// just at a partial % — it went through the same approval flow
+// (useDecideAllocationRequest), it's not a tentative/unconfirmed state.
+// Omitting it here previously undercounted anyone on a half allocation,
+// same class of bug fixed in useUtilizationData for the Bench Report.
+const TREND_STATUSES: AllocationStatus[] = ["active", "soft_reserved", "planned_for_release", "released"];
 
 interface TrendAllocationRow {
   profile_id: string;

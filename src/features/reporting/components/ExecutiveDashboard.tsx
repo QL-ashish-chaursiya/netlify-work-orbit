@@ -30,15 +30,22 @@ export function ExecutiveDashboard() {
   const headcount = utilizationRows?.length ?? 0;
   const benchCount = benchRows?.length ?? 0;
   const benchStrengthPercent = headcount > 0 ? Math.round((benchCount / headcount) * 1000) / 10 : 0;
-  const latestAverage = trend && trend.length > 0 ? trend[trend.length - 1]?.averageUtilizationPercent ?? 0 : 0;
+  // Same "active resources / total resources" formula as the main Dashboard's
+  // "Org Utilization" tile — kept identical on purpose so the two don't show
+  // conflicting headline numbers for what reads as the same metric. The
+  // monthly trend chart below is intentionally a *different* metric (average
+  // allocation load, which can exceed the headcount-fraction figure when
+  // fewer people carry more/stacked allocation %), so it's labeled separately.
+  const activeResourceCount = (utilizationRows ?? []).filter((r) => r.utilizationPercent > 0).length;
+  const orgUtilizationPercent = headcount > 0 ? Math.round((activeResourceCount / headcount) * 100) : 0;
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatTile
-          label="Org Avg. Utilization"
-          value={`${latestAverage}%`}
-          hint="Current month, averaged across active headcount"
+          label="Org Utilization"
+          value={`${orgUtilizationPercent}%`}
+          hint={`${activeResourceCount} of ${headcount} resources currently carrying work`}
         />
         <StatTile
           label="Bench Strength"
@@ -54,8 +61,11 @@ export function ExecutiveDashboard() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Monthly Utilization Trend</CardTitle>
-          <CardDescription>Org-wide average utilization % over the last 12 months.</CardDescription>
+          <CardTitle>Monthly Allocation Load Trend</CardTitle>
+          <CardDescription>
+            Average allocation % per resource over the last 12 months — a different measure from the "Org
+            Utilization" figure above, which is the share of resources carrying any work at all.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-72 w-full">
